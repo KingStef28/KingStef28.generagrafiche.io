@@ -31,9 +31,14 @@
   .top{position:sticky;top:0;z-index:10;background:var(--nero);
     padding:14px 0 10px;border-bottom:1px solid var(--bordo)}
   .tabs{display:flex;gap:8px;margin-bottom:12px}
-  .tab{flex:1;padding:13px 8px;border:1px solid var(--bordo);background:#111;
-    color:var(--muto);border-radius:10px;font:600 14px/1 inherit;letter-spacing:.14em;
+  .tab{flex:1;padding:13px 4px;border:1px solid var(--bordo);background:#111;
+    color:var(--muto);border-radius:10px;font:600 12.5px/1 inherit;letter-spacing:.08em;
     text-transform:uppercase;cursor:pointer}
+  .check{display:flex;align-items:center;gap:11px;margin:4px 0 14px;padding:13px 12px;
+    background:var(--pannello);border:1px solid var(--bordo);border-radius:9px;cursor:pointer}
+  .check input{width:22px;height:22px;accent-color:var(--giallo);flex:0 0 auto}
+  .check span{font-size:14px;color:var(--inch)}
+  .nota{margin:-2px 0 12px;font-size:12.5px;line-height:1.5;color:var(--muto)}
   .tab:focus-visible{outline:2px solid var(--giallo);outline-offset:2px}
   .tab.on{background:var(--giallo);border-color:var(--giallo);color:#0A0A0A}
   .stage{display:flex;justify-content:center}
@@ -75,7 +80,9 @@
   .stato{margin:12px 0 0;min-height:20px;text-align:center;font-size:14px;color:var(--giallo)}
 
   .out{margin-top:22px;text-align:center}
-  .out img{width:60%;max-width:220px;border-radius:8px}
+  .out img{width:100%;border-radius:8px}
+  .uscita{display:inline-block;width:46%;margin:0 1.5% 14px;vertical-align:top}
+  .uscita .et{margin:0 0 7px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--giallo)}
   .out a{display:inline-block;margin-top:14px;padding:12px 20px;border-radius:9px;
     border:1px solid var(--giallo);color:var(--giallo);text-decoration:none;font-size:15px}
   .out p{margin:12px 0 0;font-size:13px;color:var(--muto);line-height:1.5}
@@ -90,6 +97,7 @@
     <div class="tabs">
       <button class="tab on" id="t-gol" type="button">Gol</button>
       <button class="tab" id="t-md" type="button">Match day</button>
+      <button class="tab" id="t-ris" type="button">Risultato</button>
     </div>
     <div class="stage"><canvas id="cv" width="1080" height="1920"></canvas></div>
   </div>
@@ -126,6 +134,10 @@
 
   <!-- ---------- MATCH DAY ---------- -->
   <div id="p-md" class="nascosto">
+    <div class="sez">Tipo di partita</div>
+    <label class="f"><span>Compare sopra “Match day”</span>
+      <input id="m-tipo" type="text" placeholder="Campionato · Giornata 12" autocomplete="off"></label>
+
     <div class="sez">Squadre</div>
     <label class="f"><span>Casa</span>
       <input id="m-casa" type="text" placeholder="La tua squadra" autocomplete="off"></label>
@@ -147,6 +159,30 @@
       <input id="m-stadio" type="text" placeholder="Nome stadio" autocomplete="off"></label>
   </div>
 
+  <!-- ---------- RISULTATO ---------- -->
+  <div id="p-ris" class="nascosto">
+    <div class="sez">Momento</div>
+    <label class="f"><span>Quando</span>
+      <select id="r-momento">
+        <option value="primo">Fine primo tempo</option>
+        <option value="finale">Fine partita</option>
+      </select></label>
+    <label class="f"><span>Titolo personalizzato (facoltativo)</span>
+      <input id="r-titolo" type="text" placeholder="Es. Triplice fischio" autocomplete="off"></label>
+
+    <div class="sez">Risultato</div>
+    <div class="row">
+      <label class="f"><span>Gol casa</span>
+        <input id="r-gc" type="text" inputmode="numeric" placeholder="2" maxlength="2"></label>
+      <label class="f"><span>Gol ospite</span>
+        <input id="r-go" type="text" inputmode="numeric" placeholder="1" maxlength="2"></label>
+    </div>
+    <label class="f"><span>Marcatori (facoltativo)</span>
+      <input id="r-marcatori" type="text" placeholder="Rossi 12', Bianchi 45+2'" autocomplete="off"></label>
+    <p class="nota">Nomi delle squadre, stemmi e tipo di partita vengono presi dalla scheda
+      Match day: compilala una volta prima del fischio d'inizio.</p>
+  </div>
+
   <div class="sez">Piè di pagina</div>
   <div class="row">
     <label class="f"><span>Handle</span>
@@ -154,6 +190,11 @@
     <label class="f"><span>Hashtag</span>
       <input id="c-tag" type="text" autocomplete="off"></label>
   </div>
+
+  <label class="check nascosto" id="postbox">
+    <input type="checkbox" id="c-post">
+    <span>Genera anche il formato post (1080×1350)</span>
+  </label>
 
   <label class="f" id="codecbox"><span>Codifica del video</span>
     <select id="codec">
@@ -186,6 +227,26 @@ const CFG = {
 const INCH = "#F5F5F2", MUTO = "#8F8F88", SCURO = "#151515", GESSO = "#FFFFFF";
 const GIALLO = CFG.giallo, SU_GIALLO = "#0A0A0A";
 const W = 1080, H = 1920;
+
+/* Il post non è la storia schiacciata: ha un suo ritmo verticale.
+   Qui sotto le due impaginazioni, il resto del codice legge da L. */
+const FORMATI = {
+  storia: { W:1080, H:1920, FY:132, FH:1656,
+            tipo:300, tipoS:24, tipoLS:6,
+            mdT1:474, mdT2:636, mdTS:156, risT:590, risTS:130,
+            cy:992, rC:120, rCentro:165,
+            nomi:1252, nomiS:44, nomiW:380,
+            box:1352, boxH:214, infoS:38, labS:19, marcS:36, punt:104,
+            piede:1624, piedeS:24 },
+  post:   { W:1080, H:1350, FY:90, FH:1170,
+            tipo:180, tipoS:22, tipoLS:5,
+            mdT1:350, mdT2:482, mdTS:128, risT:430, risTS:110,
+            cy:700, rC:105, rCentro:145,
+            nomi:900, nomiS:40, nomiW:360,
+            box:970, boxH:190, infoS:34, labS:18, marcS:32, punt:88,
+            piede:1210, piedeS:22 }
+};
+let L = FORMATI.storia;
 
 const $ = i => document.getElementById(i);
 const cv = $("cv"), ctx = cv.getContext("2d");
@@ -283,13 +344,14 @@ function logoSopraCerchio(img, cx, cy, r){
 }
 
 function sfondo(){
-  const g = ctx.createRadialGradient(540, 806, 0, 540, 806, 1500);
+  const g = ctx.createRadialGradient(540, L.H * 0.42, 0, 540, L.H * 0.42, L.H * 0.78);
   g.addColorStop(0, "#232323"); g.addColorStop(0.55, "#131313"); g.addColorStop(1, "#050505");
-  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = g; ctx.fillRect(0, 0, L.W, L.H);
 
   ctx.strokeStyle = "rgba(255,255,255,0.5)"; ctx.lineWidth = 2.5;
-  ctx.strokeRect(46, 132, 988, 1656);
-  const r = 34, ang = [[46,132,0],[1034,132,0.5],[1034,1788,1],[46,1788,1.5]];
+  ctx.strokeRect(46, L.FY, 988, L.FH);
+  const r = 34, giu = L.FY + L.FH;
+  const ang = [[46, L.FY, 0], [1034, L.FY, 0.5], [1034, giu, 1], [46, giu, 1.5]];
   ang.forEach(function(a){
     ctx.beginPath();
     ctx.arc(a[0], a[1], r, a[2] * Math.PI, (a[2] + 0.5) * Math.PI);
@@ -299,7 +361,7 @@ function sfondo(){
 
 function piede(){
   const t = [CFG_handle(), CFG_tag()].filter(Boolean).join("   ·   ");
-  scrivi(t, 540, 1624, 24, MUTO, ARIAL, 6);
+  scrivi(t, 540, L.piede, L.piedeS, MUTO, ARIAL, 6);
 }
 const CFG_handle = () => ($("c-handle").value || "").trim();
 const CFG_tag    = () => ($("c-tag").value || "").trim();
@@ -364,60 +426,132 @@ function rigaPunteggio(casa, gc, go, osp, y){
 /* ---------- grafica MATCH DAY ---------- */
 function disegnaMd(){
   sfondo();
-  scrivi("MATCH", 540, 474, 156, INCH, "Anton", 3);
-  scrivi("DAY",   540, 636, 156, GIALLO, "Anton", 3);
+  scriviLimitato(val("m-tipo").toUpperCase(), 540, L.tipo, L.tipoS, 16, 900, MUTO, ARIAL, L.tipoLS);
+  scrivi("MATCH", 540, L.mdT1, L.mdTS, INCH, "Anton", 3);
+  scrivi("DAY",   540, L.mdT2, L.mdTS, GIALLO, "Anton", 3);
 
-  const cy = 992;
+  const cy = L.cy;
   ctx.strokeStyle = "rgba(255,255,255,0.42)"; ctx.lineWidth = 2.5;
   ctx.beginPath(); ctx.moveTo(46, cy); ctx.lineTo(1034, cy); ctx.stroke();
-  ctx.beginPath(); ctx.arc(540, cy, 165, 0, Math.PI * 2); ctx.stroke();
+  ctx.beginPath(); ctx.arc(540, cy, L.rCentro, 0, Math.PI * 2); ctx.stroke();
   ctx.fillStyle = "rgba(255,255,255,0.5)";
   ctx.beginPath(); ctx.arc(540, cy, 7, 0, Math.PI * 2); ctx.fill();
 
   [[250, logoCasa], [830, logoOsp]].forEach(function(p){
     ctx.fillStyle = SCURO;
-    ctx.beginPath(); ctx.arc(p[0], cy, 120, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(p[0], cy, L.rC, 0, Math.PI * 2); ctx.fill();
     ctx.strokeStyle = "rgba(255,255,255,0.65)"; ctx.lineWidth = 2.5;
-    ctx.beginPath(); ctx.arc(p[0], cy, 120, 0, Math.PI * 2); ctx.stroke();
-    if(p[1]) logoSopraCerchio(p[1], p[0], cy, 120);   // sopra al cerchio, intero
+    ctx.beginPath(); ctx.arc(p[0], cy, L.rC, 0, Math.PI * 2); ctx.stroke();
+    if(p[1]) logoSopraCerchio(p[1], p[0], cy, L.rC);
   });
-  scrivi("VS", 540, cy + 24, 74, GIALLO);
+  scrivi("VS", 540, cy + 24, Math.round(L.rCentro * 0.45), GIALLO);
 
-  scriviLimitato(val("m-casa").toUpperCase(), 250, 1252, 44, 28, 380, INCH, "Anton", 1);
-  scriviLimitato(val("m-osp").toUpperCase(),  830, 1252, 44, 28, 380, INCH, "Anton", 1);
+  scriviLimitato(val("m-casa").toUpperCase(), 250, L.nomi, L.nomiS, 28, L.nomiW, INCH, "Anton", 1);
+  scriviLimitato(val("m-osp").toUpperCase(),  830, L.nomi, L.nomiS, 28, L.nomiW, INCH, "Anton", 1);
 
-  const by = 1352;
+  const by = L.box, bh = L.boxH;
   ctx.strokeStyle = "rgba(255,255,255,0.5)"; ctx.lineWidth = 2.5;
-  rett(140, by, 800, 214, 10); ctx.stroke();
+  rett(140, by, 800, bh, 10); ctx.stroke();
   ctx.strokeStyle = "rgba(255,255,255,0.38)"; ctx.lineWidth = 2;
   [406, 674].forEach(function(x){
-    ctx.beginPath(); ctx.moveTo(x, by + 30); ctx.lineTo(x, by + 184); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x, by + bh * 0.14); ctx.lineTo(x, by + bh * 0.86); ctx.stroke();
   });
   const col = [[273, "DATA", val("m-data")], [540, "CALCIO D'INIZIO", val("m-ora")],
                [807, "STADIO", val("m-stadio")]];
-  const LARG = 230;                     // larghezza utile di ogni colonna
+  const LARG = 230;
   col.forEach(function(c){
-    scriviLimitato(c[1], c[0], by + 76, 19, 19, LARG, GIALLO, ARIAL, 3);
-    scriviLimitato(c[2].toUpperCase(), c[0], by + 148, 38, 26, LARG, INCH, "Anton", 0);
+    scriviLimitato(c[1], c[0], by + bh * 0.355, L.labS, L.labS, LARG, GIALLO, ARIAL, 3);
+    scriviLimitato(c[2].toUpperCase(), c[0], by + bh * 0.69, L.infoS, 24, LARG, INCH, "Anton", 0);
   });
   piede();
 }
 
-function disegna(){ scheda === "gol" ? disegnaGol() : disegnaMd(); }
+/* ---------- grafica RISULTATO (intervallo / fine partita) ---------- */
+function punteggioGrande(gc, go, x, y){
+  const pezzi = [];
+  if(gc) pezzi.push({t: gc, s: L.punt, c: INCH});
+  if(gc && go) pezzi.push({t: "–", s: Math.round(L.punt * 0.69), c: GIALLO});
+  if(go) pezzi.push({t: go, s: L.punt, c: INCH});
+  if(!pezzi.length) return;
+  const MAXW = Math.round(L.rCentro * 1.82);
+  let f = 1, tot = 0;
+  for(let g = 0; g < 20; g++){
+    tot = 0;
+    pezzi.forEach(function(p){
+      p.sf = Math.round(p.s * f);
+      p.w = larghezzaTesto(p.t, p.sf, "Anton", 0);
+      tot += p.w;
+    });
+    tot += Math.round(18 * f) * (pezzi.length - 1);
+    if(tot <= MAXW || f <= 0.5) break;
+    f -= 0.05;
+  }
+  let cx = x - tot / 2;
+  const sp = Math.round(18 * f);
+  pezzi.forEach(function(p){ scrivi(p.t, cx, y, p.sf, p.c, "Anton", 0, "left"); cx += p.w + sp; });
+}
+
+function disegnaRis(){
+  sfondo();
+  scriviLimitato(val("m-tipo").toUpperCase(), 540, L.tipo, L.tipoS, 16, 900, MUTO, ARIAL, L.tipoLS);
+
+  const predefinito = $("r-momento").value === "primo" ? "INTERVALLO" : "FINALE";
+  scriviLimitato((val("r-titolo") || predefinito).toUpperCase(),
+                 540, L.risT, L.risTS, 70, 900, GIALLO, "Anton", 2);
+
+  const cy = L.cy;
+  ctx.strokeStyle = "rgba(255,255,255,0.42)"; ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.moveTo(46, cy); ctx.lineTo(1034, cy); ctx.stroke();
+  ctx.beginPath(); ctx.arc(540, cy, L.rCentro, 0, Math.PI * 2); ctx.stroke();
+
+  [[250, logoCasa], [830, logoOsp]].forEach(function(p){
+    ctx.fillStyle = SCURO;
+    ctx.beginPath(); ctx.arc(p[0], cy, L.rC, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,0.65)"; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(p[0], cy, L.rC, 0, Math.PI * 2); ctx.stroke();
+    if(p[1]) logoSopraCerchio(p[1], p[0], cy, L.rC);
+  });
+
+  punteggioGrande(val("r-gc"), val("r-go"), 540, cy + Math.round(L.punt * 0.35));
+
+  scriviLimitato(val("m-casa").toUpperCase(), 250, L.nomi, L.nomiS, 28, L.nomiW, INCH, "Anton", 1);
+  scriviLimitato(val("m-osp").toUpperCase(),  830, L.nomi, L.nomiS, 28, L.nomiW, INCH, "Anton", 1);
+
+  const by = L.box, bh = L.boxH;
+  ctx.strokeStyle = "rgba(255,255,255,0.5)"; ctx.lineWidth = 2.5;
+  rett(140, by, 800, bh, 10); ctx.stroke();
+  const marc = val("r-marcatori");
+  if(marc){
+    scrivi("MARCATORI", 540, by + bh * 0.355, L.labS, GIALLO, ARIAL, 3);
+    scriviLimitato(marc.toUpperCase(), 540, by + bh * 0.69, L.marcS, 22, 720, INCH, "Anton", 0);
+  }
+  piede();
+}
+
+function disegna(){
+  if(scheda === "gol") disegnaGol();
+  else if(scheda === "md") disegnaMd();
+  else disegnaRis();
+}
 
 /* ---------- interazione ---------- */
 function apri(nome){
   scheda = nome;
   $("t-gol").classList.toggle("on", nome === "gol");
   $("t-md").classList.toggle("on", nome === "md");
+  $("t-ris").classList.toggle("on", nome === "ris");
   $("p-gol").classList.toggle("nascosto", nome !== "gol");
   $("p-md").classList.toggle("nascosto", nome !== "md");
+  $("p-ris").classList.toggle("nascosto", nome !== "ris");
   $("genvid").classList.toggle("nascosto", nome !== "gol");
   $("codecbox").classList.toggle("nascosto", nome !== "gol");
+  $("postbox").classList.toggle("nascosto", nome === "gol");
   disegna();
 }
 $("t-gol").onclick = () => apri("gol");
 $("t-md").onclick  = () => apri("md");
+$("t-ris").onclick = () => apri("ris");
 
 document.querySelectorAll("input[type=text]").forEach(function(i){ i.oninput = disegna; });
 
@@ -871,20 +1005,40 @@ $("genvid").onclick = function(){
   })();
 };
 
+function rendiFormato(nome){
+  L = FORMATI[nome];
+  cv.width = L.W; cv.height = L.H;      // ridimensionare azzera il canvas
+  disegna();
+  return cv.toDataURL("image/png");
+}
+
 $("gen").onclick = function(){
-  const nome = scheda === "gol" ? "gol.png" : "match-day.png";
-  let dati;
-  try { dati = cv.toDataURL("image/png"); }
-  catch(err){
+  const base = scheda === "gol" ? "gol" : (scheda === "md" ? "match-day" : "risultato");
+  const doppio = scheda !== "gol" && $("c-post").checked;
+  const uscite = [];
+  try {
+    uscite.push({et: "Storia · 1080×1920",
+                 nome: base + (doppio ? "-storia" : "") + ".png",
+                 dati: cv.toDataURL("image/png")});
+    if(doppio){
+      uscite.push({et: "Post · 1080×1350", nome: base + "-post.png", dati: rendiFormato("post")});
+      rendiFormato("storia");           // ripristina l'anteprima
+    }
+  } catch(err){
+    L = FORMATI.storia; cv.width = L.W; cv.height = L.H; disegna();
     errore("Esportazione bloccata (" + (err.name || err.message) + "): questa anteprima non lascia " +
            "salvare le immagini caricate. Apri la versione online e riprova.");
     return;
   }
+  let html = "";
+  uscite.forEach(function(u){
+    html += '<div class="uscita"><p class="et">' + u.et + '</p>' +
+            '<img src="' + u.dati + '" alt="Grafica ' + u.et + '">' +
+            '<br><a href="' + u.dati + '" download="' + u.nome + '">Scarica</a></div>';
+  });
+  html += '<p>Se il download non parte, tieni premuta l\'immagine e scegli “Aggiungi a Foto”.</p>';
   const o = $("out");
-  o.innerHTML = '<img src="' + dati + '" alt="Grafica pronta">' +
-    '<br><a href="' + dati + '" download="' + nome + '">Scarica il PNG</a>' +
-    '<p>Se il download non parte, tieni premuta l\'immagine qui sopra e scegli' +
-    ' “Aggiungi a Foto”.</p>';
+  o.innerHTML = html;
   o.classList.remove("nascosto");
   mostraDiagnostica();
   o.scrollIntoView({behavior: "smooth", block: "nearest"});
@@ -894,6 +1048,7 @@ function mostraDiagnostica(){
   $("stato").innerHTML = '<span style="color:#8F8F88;font-size:12px">' + diagnostica() + '</span>';
 }
 $("codec").onchange = mostraDiagnostica;
+$("r-momento").onchange = disegna;
 
 $("c-handle").value = CFG.handle;
 $("c-tag").value = CFG.hashtag;
