@@ -104,7 +104,7 @@
         <input id="g-num" type="text" inputmode="numeric" placeholder="10" maxlength="2"></label>
     </div>
     <label class="file"><input id="g-foto" type="file"
-        accept="image/*,video/*,video/quicktime,video/mp4,.mov,.mp4,.m4v,.hevc">
+        accept="image/*,video/*,image/gif,video/quicktime,video/mp4,.gif,.mov,.mp4,.m4v,.hevc">
       <span id="g-foto-l">Scegli la foto o la clip dell'esultanza</span></label>
 
     <div class="sez">Punteggio</div>
@@ -204,6 +204,48 @@ function scrivi(t, x, y, size, colore, famiglia, ls, allineamento){
 }
 const ARIAL = "Arial, Helvetica, sans-serif";
 
+/* ---------- testo dentro limiti: mai sopra la colonna accanto ---------- */
+function larghezzaTesto(t, size, famiglia, ls){
+  ctx.font = size + "px " + (famiglia || "Anton");
+  if("letterSpacing" in ctx) ctx.letterSpacing = (ls || 0) + "px";
+  const w = ctx.measureText(t).width;
+  if("letterSpacing" in ctx) ctx.letterSpacing = "0px";
+  return w;
+}
+
+function adattaTesto(t, size, maxW, famiglia, ls){
+  let s = size;
+  while(s > 10 && larghezzaTesto(t, s, famiglia, ls) > maxW) s -= 1;
+  return s;
+}
+
+function spezzaInDue(t){
+  const p = t.split(/\s+/);
+  if(p.length < 2) return [t];
+  let taglio = 1, scarto = Infinity;
+  for(let i = 1; i < p.length; i++){
+    const d = Math.abs(p.slice(0, i).join(" ").length - p.slice(i).join(" ").length);
+    if(d < scarto){ scarto = d; taglio = i; }
+  }
+  return [p.slice(0, taglio).join(" "), p.slice(taglio).join(" ")];
+}
+
+/* Scrive centrato in x restando dentro maxW: prima rimpicciolisce,
+   e solo se scenderebbe sotto minSize va a capo su due righe. */
+function scriviLimitato(t, x, y, size, minSize, maxW, colore, famiglia, ls){
+  if(!t) return;
+  const s = adattaTesto(t, size, maxW, famiglia, ls);
+  if(s >= minSize || t.indexOf(" ") < 0){
+    scrivi(t, x, y, s, colore, famiglia, ls);
+    return;
+  }
+  const righe = spezzaInDue(t);
+  let s2 = Math.round(size * 0.74);
+  righe.forEach(function(r){ s2 = Math.min(s2, adattaTesto(r, s2, maxW, famiglia, ls)); });
+  scrivi(righe[0], x, y - Math.round(s2 * 0.6), s2, colore, famiglia, ls);
+  scrivi(righe[1], x, y + Math.round(s2 * 0.6), s2, colore, famiglia, ls);
+}
+
 function rett(x, y, w, h, r){
   ctx.beginPath();
   if(ctx.roundRect){ ctx.roundRect(x, y, w, h, r); return; }
@@ -227,6 +269,17 @@ function cerchioImmagine(img, cx, cy, r){
   ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.clip();
   ctx.drawImage(img, cx - w / 2, cy - h / 2, w, h);
   ctx.restore();
+}
+
+/* Il logo NON viene ritagliato: si appoggia sopra al cerchio, tutto visibile.
+   Riquadro un filo più largo del cerchio, così anche uno stemma stretto e alto respira. */
+function logoSopraCerchio(img, cx, cy, r){
+  const d = misura(img);
+  if(!d[0] || !d[1]) return;
+  const lato = 2 * r * 1.1;
+  const s = Math.min(lato / d[0], lato / d[1]);
+  const w = d[0] * s, h = d[1] * s;
+  ctx.drawImage(img, cx - w / 2, cy - h / 2, w, h);
 }
 
 function sfondo(){
@@ -269,7 +322,7 @@ function disegnaGol(){
   ctx.beginPath(); ctx.arc(694, 785, 58, 0, Math.PI * 2); ctx.fill();
   scrivi(val("g-num"), 694, 806, 60, SU_GIALLO);
 
-  scrivi(val("g-nome").toUpperCase(), 540, 1230, 104, INCH, "Anton", 1);
+  scriviLimitato(val("g-nome").toUpperCase(), 540, 1230, 104, 60, 900, INCH, "Anton", 1);
 
   const by = 1352;
   ctx.strokeStyle = "rgba(255,255,255,0.5)"; ctx.lineWidth = 2.5;
@@ -290,12 +343,22 @@ function rigaPunteggio(casa, gc, go, osp, y){
   if(go)   pezzi.push({t: go, s: 58, c: INCH});
   if(osp)  pezzi.push({t: osp.toUpperCase(), s: 54, c: INCH});
   if(!pezzi.length) return;
-  const spazio = 22;
-  let tot = 0;
-  pezzi.forEach(function(p){ ctx.font = p.s + "px Anton"; p.w = ctx.measureText(p.t).width; tot += p.w; });
-  tot += spazio * (pezzi.length - 1);
+  const MAXW = 680;                       // il riquadro è largo 740
+  let spazio = 22, fattore = 1, tot;
+  for(let g = 0; g < 24; g++){            // rimpicciolisce finché la riga entra
+    tot = 0;
+    pezzi.forEach(function(p){
+      p.sf = Math.round(p.s * fattore);
+      p.w = larghezzaTesto(p.t, p.sf, "Anton", 0);
+      tot += p.w;
+    });
+    tot += Math.round(spazio * fattore) * (pezzi.length - 1);
+    if(tot <= MAXW || fattore <= 0.45) break;
+    fattore -= 0.04;
+  }
   let x = 540 - tot / 2;
-  pezzi.forEach(function(p){ scrivi(p.t, x, y, p.s, p.c, "Anton", 0, "left"); x += p.w + spazio; });
+  const sp = Math.round(spazio * fattore);
+  pezzi.forEach(function(p){ scrivi(p.t, x, y, p.sf, p.c, "Anton", 0, "left"); x += p.w + sp; });
 }
 
 /* ---------- grafica MATCH DAY ---------- */
@@ -314,14 +377,14 @@ function disegnaMd(){
   [[250, logoCasa], [830, logoOsp]].forEach(function(p){
     ctx.fillStyle = SCURO;
     ctx.beginPath(); ctx.arc(p[0], cy, 120, 0, Math.PI * 2); ctx.fill();
-    if(p[1]) cerchioImmagine(p[1], p[0], cy, 120);
     ctx.strokeStyle = "rgba(255,255,255,0.65)"; ctx.lineWidth = 2.5;
     ctx.beginPath(); ctx.arc(p[0], cy, 120, 0, Math.PI * 2); ctx.stroke();
+    if(p[1]) logoSopraCerchio(p[1], p[0], cy, 120);   // sopra al cerchio, intero
   });
   scrivi("VS", 540, cy + 24, 74, GIALLO);
 
-  scrivi(val("m-casa").toUpperCase(), 250, 1252, 44, INCH, "Anton", 1);
-  scrivi(val("m-osp").toUpperCase(),  830, 1252, 44, INCH, "Anton", 1);
+  scriviLimitato(val("m-casa").toUpperCase(), 250, 1252, 44, 28, 380, INCH, "Anton", 1);
+  scriviLimitato(val("m-osp").toUpperCase(),  830, 1252, 44, 28, 380, INCH, "Anton", 1);
 
   const by = 1352;
   ctx.strokeStyle = "rgba(255,255,255,0.5)"; ctx.lineWidth = 2.5;
@@ -332,9 +395,10 @@ function disegnaMd(){
   });
   const col = [[273, "DATA", val("m-data")], [540, "CALCIO D'INIZIO", val("m-ora")],
                [807, "STADIO", val("m-stadio")]];
+  const LARG = 230;                     // larghezza utile di ogni colonna
   col.forEach(function(c){
-    scrivi(c[1], c[0], by + 76, 21, GIALLO, ARIAL, 3);
-    scrivi(c[2].toUpperCase(), c[0], by + 148, 44, INCH);
+    scriviLimitato(c[1], c[0], by + 76, 19, 19, LARG, GIALLO, ARIAL, 3);
+    scriviLimitato(c[2].toUpperCase(), c[0], by + 148, 38, 26, LARG, INCH, "Anton", 0);
   });
   piede();
 }
@@ -379,6 +443,180 @@ function caricaImmagine(file, ok, ko){
     catch(e){ /* si prosegue con il data URL */ }
   }
   perDataURL();
+}
+
+/* ---------- GIF animate ----------
+   Un <video> non riproduce le GIF e drawImage() di una <img> GIF disegna solo
+   il primo fotogramma: la decodifichiamo qui, blocco per blocco. */
+function lzwDecodifica(dati, minCode, atteso){
+  const CLEAR = 1 << minCode, EOI = CLEAR + 1;
+  const pref = new Int32Array(4096), suff = new Uint8Array(4096), pila = new Uint8Array(4096);
+  const out = new Uint8Array(atteso);
+  for(let k = 0; k < CLEAR; k++) suff[k] = k;
+  let dim = minCode + 1, prossimo = EOI + 1, prec = -1, primo = 0;
+  let acc = 0, nbit = 0, i = 0, o = 0;
+
+  while(o < atteso){
+    while(nbit < dim && i < dati.length){ acc |= dati[i++] << nbit; nbit += 8; }
+    if(nbit < dim) break;
+    const codice = acc & ((1 << dim) - 1);
+    acc >>>= dim; nbit -= dim;
+
+    if(codice === CLEAR){ dim = minCode + 1; prossimo = EOI + 1; prec = -1; continue; }
+    if(codice === EOI) break;
+
+    let sp = 0, c = codice;
+    if(c >= prossimo){
+      if(prec === -1) break;
+      pila[sp++] = primo; c = prec;
+    }
+    while(c >= CLEAR){ pila[sp++] = suff[c]; c = pref[c]; }
+    primo = suff[c];
+    pila[sp++] = primo;
+    while(sp > 0 && o < atteso) out[o++] = pila[--sp];
+
+    if(prec !== -1 && prossimo < 4096){
+      pref[prossimo] = prec; suff[prossimo] = primo; prossimo++;
+      if(prossimo === (1 << dim) && dim < 12) dim++;
+    }
+    prec = codice;
+  }
+  return out;
+}
+
+function ordineInterlacciato(h){
+  const o = new Int32Array(h);
+  let k = 0;
+  [[0,8],[4,8],[2,4],[1,2]].forEach(function(pa){
+    for(let y = pa[0]; y < h; y += pa[1]) o[k++] = y;
+  });
+  return o;
+}
+
+function analizzaGif(buffer){
+  const d = new Uint8Array(buffer);
+  let p = 0;
+  if(!(d[0] === 71 && d[1] === 73 && d[2] === 70)) throw new Error("non è una GIF");
+  const l16 = function(){ const v = d[p] | (d[p+1] << 8); p += 2; return v; };
+  const tavola = function(n){ const t = d.subarray(p, p + n * 3); p += n * 3; return t; };
+  const blocchi = function(){
+    const parti = []; let len, tot = 0;
+    while(p < d.length && (len = d[p++]) !== 0){ parti.push(d.subarray(p, p + len)); p += len; tot += len; }
+    const out = new Uint8Array(tot); let o = 0;
+    parti.forEach(function(x){ out.set(x, o); o += x.length; });
+    return out;
+  };
+
+  p = 6;
+  const W = l16(), H = l16(), pk = d[p++];
+  p += 2;                                   // sfondo + aspect
+  let gct = (pk & 0x80) ? tavola(1 << ((pk & 7) + 1)) : null;
+
+  const frames = [];
+  let gce = null, fine = false;
+  while(!fine && p < d.length){
+    const b = d[p++];
+    if(b === 0x2C){
+      const left = l16(), top = l16(), w = l16(), h = l16(), fpk = d[p++];
+      const ct = (fpk & 0x80) ? tavola(1 << ((fpk & 7) + 1)) : gct;
+      const interlacciata = !!(fpk & 0x40);
+      const minCode = d[p++];
+      const indici = lzwDecodifica(blocchi(), minCode, w * h);
+      frames.push({left: left, top: top, w: w, h: h, ct: ct, interlacciata: interlacciata,
+                   indici: indici,
+                   ritardo: gce ? gce.ritardo : 100,
+                   trasparente: (gce && gce.trasparente) ? gce.indice : -1,
+                   disposal: gce ? gce.disposal : 0});
+      gce = null;
+    } else if(b === 0x21){
+      const et = d[p++];
+      if(et === 0xF9){
+        p++;                                // lunghezza (4)
+        const fl = d[p++], rit = l16(), idx = d[p++];
+        p++;                                // terminatore
+        gce = {disposal: (fl >> 2) & 7, trasparente: !!(fl & 1), indice: idx,
+               ritardo: (rit || 10) * 10};
+      } else blocchi();
+    } else if(b === 0x3B) fine = true;
+    else break;
+  }
+  if(!frames.length) throw new Error("GIF senza fotogrammi");
+  return {larghezza: W, altezza: H, frames: frames};
+}
+
+/* Compone i fotogrammi (trasparenza e disposal) in tele pronte da disegnare. */
+function componiGif(gif){
+  const W = gif.larghezza, H = gif.altezza;
+  const scala = Math.min(1, 600 / Math.max(W, H));      // limita la memoria
+  const LW = Math.max(1, Math.round(W * scala)), LH = Math.max(1, Math.round(H * scala));
+  const base = document.createElement("canvas"); base.width = W; base.height = H;
+  const bctx = base.getContext("2d");
+  const tmp = document.createElement("canvas");
+  const risultato = [];
+  let salvato = null;
+
+  gif.frames.forEach(function(f){
+    if(f.disposal === 3) salvato = bctx.getImageData(0, 0, W, H);
+    tmp.width = f.w; tmp.height = f.h;
+    const tctx = tmp.getContext("2d");
+    const img = tctx.createImageData(f.w, f.h), dat = img.data;
+    const ordine = f.interlacciata ? ordineInterlacciato(f.h) : null;
+    for(let y = 0; y < f.h; y++){
+      const dy = ordine ? ordine[y] : y;
+      for(let x = 0; x < f.w; x++){
+        const idx = f.indici[y * f.w + x];
+        const o = (dy * f.w + x) * 4;
+        if(idx === f.trasparente || !f.ct){ dat[o+3] = 0; continue; }
+        dat[o]   = f.ct[idx*3];
+        dat[o+1] = f.ct[idx*3+1];
+        dat[o+2] = f.ct[idx*3+2];
+        dat[o+3] = 255;
+      }
+    }
+    tctx.putImageData(img, 0, 0);
+    bctx.drawImage(tmp, f.left, f.top);
+
+    const out = document.createElement("canvas");
+    out.width = LW; out.height = LH;
+    out.getContext("2d").drawImage(base, 0, 0, LW, LH);
+    risultato.push({tela: out, ritardo: Math.max(20, f.ritardo)});
+
+    if(f.disposal === 2) bctx.clearRect(f.left, f.top, f.w, f.h);
+    else if(f.disposal === 3 && salvato) bctx.putImageData(salvato, 0, 0);
+  });
+  return risultato;
+}
+
+let gifTimer = null, registrando = false;
+function riproduciGif(fotogrammi){
+  if(gifTimer){ clearTimeout(gifTimer); gifTimer = null; }
+  const vista = document.createElement("canvas");
+  vista.width = fotogrammi[0].tela.width;
+  vista.height = fotogrammi[0].tela.height;
+  const vctx = vista.getContext("2d");
+  let i = 0;
+  function passo(){
+    vctx.clearRect(0, 0, vista.width, vista.height);
+    vctx.drawImage(fotogrammi[i].tela, 0, 0);
+    if(!registrando) disegna();
+    const rit = fotogrammi[i].ritardo;
+    i = (i + 1) % fotogrammi.length;
+    if(fotogrammi.length > 1) gifTimer = setTimeout(passo, rit);
+  }
+  passo();
+  return vista;
+}
+
+function caricaGif(file, ok, ko){
+  const fr = new FileReader();
+  fr.onload = function(){
+    try {
+      const fotogrammi = componiGif(analizzaGif(fr.result));
+      ok(riproduciGif(fotogrammi), fotogrammi.length);
+    } catch(e){ ko("GIF non leggibile (" + e.message + ")"); }
+  };
+  fr.onerror = function(){ ko("lettura del file fallita"); };
+  fr.readAsArrayBuffer(file);
 }
 
 function caricaVideo(file, ok, ko){
@@ -433,8 +671,10 @@ function collegaFile(idInput, idEtichetta, testo, assegna){
       else mostraDiagnostica();
     };
     const fallito = function(msg){ errore(testo + ": " + msg); };
-    if(f.type.indexOf("video") === 0) caricaVideo(f, fatto, fallito);
-    else caricaImmagine(f, fatto, fallito);
+    const gif = f.type === "image/gif" || /\.gif$/i.test(f.name || "");
+    if(gif)                              caricaGif(f, fatto, fallito);
+    else if(f.type.indexOf("video") === 0) caricaVideo(f, fatto, fallito);
+    else                                 caricaImmagine(f, fatto, fallito);
   };
 }
 collegaFile("g-foto",  "g-foto-l",  "Foto o clip",    i => foto = i);
@@ -481,7 +721,7 @@ function disegnaGolAnimato(t){               // t va da 0 a 1 dentro il ciclo
   ctx.beginPath(); ctx.arc(699, 771, 58, 0, Math.PI * 2); ctx.fill();
   scrivi(val("g-num"), 699, 792, 60, SU_GIALLO);
 
-  scrivi(val("g-nome").toUpperCase(), 540, 1300, 92, INCH, "Anton", 1);
+  scriviLimitato(val("g-nome").toUpperCase(), 540, 1300, 92, 56, 900, INCH, "Anton", 1);
 
   const by = 1352;
   ctx.strokeStyle = "rgba(255,255,255,0.5)"; ctx.lineWidth = 2.5;
@@ -547,6 +787,7 @@ function decodifica(){
 }
 
 function errore(testo){
+  registrando = false;
   $("stato").innerHTML = '<span style="color:#FF6B6B">' + testo + '</span>';
   $("gen").disabled = false; $("genvid").disabled = false;
 }
@@ -603,6 +844,7 @@ $("genvid").onclick = function(){
       '<p>Su iPhone il file finisce nell\'app File: aprilo, tocca Condividi e scegli' +
       ' “Salva video” per portarlo nelle Foto, poi caricalo nelle storie.</p>';
     o.classList.remove("nascosto");
+    registrando = false;
     $("gen").disabled = false; $("genvid").disabled = false;
     mostraDiagnostica();
     disegna();
@@ -610,6 +852,7 @@ $("genvid").onclick = function(){
   };
 
   $("gen").disabled = true; $("genvid").disabled = true;
+  registrando = true;
   $("out").classList.add("nascosto");
   try { rec.start(200); }                     // pezzi ogni 200 ms: più affidabile su Safari
   catch(err){ errore("Avvio registrazione fallito: " + err.message); return; }
