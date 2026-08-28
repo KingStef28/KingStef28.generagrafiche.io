@@ -135,8 +135,8 @@
   <!-- ---------- MATCH DAY ---------- -->
   <div id="p-md" class="nascosto">
     <label class="check" id="mdInv">
-      <input type="checkbox" id="m-invert" checked>
-      <span>Fondo giallo, scritte nere</span>
+      <input type="checkbox" id="m-invert">
+      <span>Inverti: fondo nero</span>
     </label>
 
     <div class="sez">Tipo di partita</div>
@@ -168,7 +168,7 @@
   <div id="p-ris" class="nascosto">
     <label class="check" id="risInv">
       <input type="checkbox" id="r-invert">
-      <span>Fondo giallo, scritte nere</span>
+      <span>Inverti: fondo nero</span>
     </label>
 
     <div class="sez">Momento</div>
@@ -228,8 +228,8 @@
    IMPOSTAZIONI FISSE — cambiale una volta e restano per ogni partita
    ========================================================================= */
 const CFG = {
-  handle:  "@LATUASQUADRA",
-  hashtag: "#FORZASQUADRA",
+  handle:  "@polisportiva_valdiloreto",
+  hashtag: "#FORZAVDL",
   giallo:  "#FFD400"
 };
 /* ========================================================================= */
@@ -244,27 +244,27 @@ function mescola(hex, f){
   return "rgb(" + c[0] + "," + c[1] + "," + c[2] + ")";
 }
 
-const INCH = "#F5F5F2", MUTO = "#8F8F88", SCURO = "#151515", GESSO = "#FFFFFF";
+const INCH = "#F5F5F2", MUTO = "#8F8F88", SCURO = "#0D0D0D", GESSO = "#FFFFFF";
 const GIALLO = CFG.giallo, SU_GIALLO = "#0A0A0A";
 const W = 1080, H = 1920;
 
 /* Il post non è la storia schiacciata: ha un suo ritmo verticale.
    Qui sotto le due impaginazioni, il resto del codice legge da L. */
 const FORMATI = {
-  storia: { W:1080, H:1920, FY:132, FH:1656,
-            tipo:300, tipoS:24, tipoLS:6,
-            mdT1:474, mdT2:636, mdTS:156, risT:590, risTS:130,
-            cy:992, rC:120, rCentro:165,
-            nomi:1252, nomiS:44, nomiW:380,
-            box:1352, boxH:214, infoS:38, labS:19, marcS:36, punt:104,
-            piede:1624, piedeS:24 },
-  post:   { W:1080, H:1350, FY:90, FH:1170,
-            tipo:180, tipoS:22, tipoLS:5,
-            mdT1:350, mdT2:482, mdTS:128, risT:430, risTS:110,
-            cy:700, rC:105, rCentro:145,
-            nomi:900, nomiS:40, nomiW:360,
-            box:970, boxH:190, infoS:34, labS:18, marcS:32, punt:88,
-            piede:1210, piedeS:22 }
+  storia: { W:1080, H:1920, bordo:44, fregio:78, angolo:180,
+            tipo:212, tipoS:30, tipoLS:8,
+            mdT1:452, mdT2:622, mdTS:172, risT:560, risTS:150,
+            fasciaY:790, fasciaH:360, cy:970, rC:138, rCentro:178,
+            nomi:1292, nomiS:50, nomiW:400,
+            box:1400, boxH:240, infoS:40, labS:22, marcS:38, punt:118,
+            piede:1756, piedeS:27 },
+  post:   { W:1080, H:1350, bordo:40, fregio:68, angolo:156,
+            tipo:158, tipoS:27, tipoLS:7,
+            mdT1:330, mdT2:462, mdTS:132, risT:410, risTS:118,
+            fasciaY:560, fasciaH:290, cy:705, rC:110, rCentro:142,
+            nomi:948, nomiS:44, nomiW:380,
+            box:1020, boxH:200, infoS:34, labS:20, marcS:32, punt:96,
+            piede:1268, piedeS:23 }
 };
 let L = FORMATI.storia;
 
@@ -284,6 +284,7 @@ function scrivi(t, x, y, size, colore, famiglia, ls, allineamento){
   if("letterSpacing" in ctx) ctx.letterSpacing = "0px";
 }
 const ARIAL = "Arial, Helvetica, sans-serif";
+const SERIF = "Georgia, 'Times New Roman', serif";
 
 /* ---------- testo dentro limiti: mai sopra la colonna accanto ---------- */
 /* Metriche reali del carattere: servono per centrare davvero i glifi
@@ -377,98 +378,277 @@ function cerchioImmagine(img, cx, cy, r){
 
 /* Il logo NON viene ritagliato: si appoggia sopra al cerchio, tutto visibile.
    Riquadro un filo più largo del cerchio, così anche uno stemma stretto e alto respira. */
-function logoSopraCerchio(img, cx, cy, r){
-  const d = misura(img);
-  if(!d[0] || !d[1]) return;
-  const lato = 2 * r * 1.1;
-  const s = Math.min(lato / d[0], lato / d[1]);
-  const w = d[0] * s, h = d[1] * s;
-  ctx.drawImage(img, cx - w / 2, cy - h / 2, w, h);
+/* Due stemmi possono avere margini vuoti diversi e proporzioni diverse:
+   qui ritagliamo il vuoto attorno e misuriamo quanta area occupano davvero,
+   così a video "pesano" uguale anche se i file sono diversi. */
+const cacheLogo = new WeakMap();
+
+function analizzaLogo(media){
+  if(cacheLogo.has(media)) return cacheLogo.get(media);
+  let out = null;
+  try {
+    const d = misura(media);
+    if(d[0] && d[1]){
+      const N = 512;
+      const f = Math.min(1, N / Math.max(d[0], d[1]));
+      const w = Math.max(1, Math.round(d[0] * f)), h = Math.max(1, Math.round(d[1] * f));
+      const c = document.createElement("canvas"); c.width = w; c.height = h;
+      const k = c.getContext("2d");
+      k.drawImage(media, 0, 0, w, h);
+      const im = k.getImageData(0, 0, w, h), p = im.data;
+
+      let trasp = false;
+      for(let i = 3; i < p.length; i += 4){ if(p[i] < 250){ trasp = true; break; } }
+
+      let ripulito = false;
+      if(!trasp){
+        const ang = [[0,0],[w-1,0],[0,h-1],[w-1,h-1]].map(function(a){
+          const o = (a[1] * w + a[0]) * 4; return [p[o], p[o+1], p[o+2]];
+        });
+        const simili = ang.every(function(v){
+          return Math.abs(v[0]-ang[0][0]) + Math.abs(v[1]-ang[0][1]) + Math.abs(v[2]-ang[0][2]) < 60;
+        });
+        if(simili){
+          // riempimento dai bordi: toglie il fondo senza toccare i bianchi interni
+          const bg = ang[0], tol = 70, visto = new Uint8Array(w * h), coda = [];
+          const uguale = function(i){
+            const o = i * 4;
+            return Math.abs(p[o]-bg[0]) + Math.abs(p[o+1]-bg[1]) + Math.abs(p[o+2]-bg[2]) < tol;
+          };
+          for(let x = 0; x < w; x++){ coda.push(x); coda.push((h-1)*w + x); }
+          for(let y = 0; y < h; y++){ coda.push(y*w); coda.push(y*w + w - 1); }
+          while(coda.length){
+            const i = coda.pop();
+            if(i < 0 || i >= w*h || visto[i] || !uguale(i)) continue;
+            visto[i] = 1;
+            p[i*4+3] = 0;
+            const x = i % w, y = (i / w) | 0;
+            if(x > 0) coda.push(i-1);
+            if(x < w-1) coda.push(i+1);
+            if(y > 0) coda.push(i-w);
+            if(y < h-1) coda.push(i+w);
+          }
+          k.putImageData(im, 0, 0);
+          ripulito = true;
+        }
+      }
+
+      let x0 = w, y0 = h, x1 = -1, y1 = -1, n = 0;
+      const conAlpha = trasp || ripulito;
+      for(let y = 0; y < h; y++) for(let x = 0; x < w; x++){
+        const o = (y * w + x) * 4;
+        const pieno = conAlpha ? p[o+3] > 40 : true;
+        if(pieno){ n++; if(x<x0)x0=x; if(x>x1)x1=x; if(y<y0)y0=y; if(y>y1)y1=y; }
+      }
+      if(x1 >= x0 && y1 >= y0 && n > 0){
+        out = { sorgente: ripulito ? c : media,
+                fatt: ripulito ? 1 : f,
+                sx: ripulito ? x0 : x0 / f, sy: ripulito ? y0 : y0 / f,
+                sw: ripulito ? (x1-x0+1) : (x1-x0+1) / f,
+                sh: ripulito ? (y1-y0+1) : (y1-y0+1) / f,
+                densita: n / ((x1 - x0 + 1) * (y1 - y0 + 1)) };
+      }
+    }
+  } catch(e){ out = null; }        // canvas contaminato: si ripiega sul comportamento base
+  cacheLogo.set(media, out);
+  return out;
 }
 
-/* Due temi: quello scuro storico e quello invertito (fondo giallo, scritte nere). */
-const TEMI = {
-  scuro: { fondo: null, inch: INCH, muto: MUTO, acc: GIALLO,
-           tit1: INCH, tit2: GIALLO, piatto: SCURO,
-           gesso: "rgba(255,255,255,0.5)", gessoTenue: "rgba(255,255,255,0.42)",
-           anello: "rgba(255,255,255,0.65)", divisori: "rgba(255,255,255,0.38)" },
-  giallo:{ fondo: CFG.giallo, inch: "#0A0A0A", muto: "rgba(0,0,0,0.62)", acc: "rgba(0,0,0,0.74)",
-           tit1: "rgba(0,0,0,0.74)", tit2: "#0A0A0A", piatto: mescola(CFG.giallo, -0.10),
-           gesso: "rgba(0,0,0,0.42)", gessoTenue: "rgba(0,0,0,0.34)",
-           anello: "rgba(0,0,0,0.55)", divisori: "rgba(0,0,0,0.32)" }
-};
-let T = TEMI.scuro;
-
-let mutoAtt = MUTO;                  // grigio del testo secondario, dipende dallo sfondo
-
-function sfondo(base){
-  const g = ctx.createRadialGradient(540, L.H * 0.42, 0, 540, L.H * 0.42, L.H * 0.78);
-  if(base){
-    g.addColorStop(0, mescola(base, 0.10));
-    g.addColorStop(0.55, base);
-    g.addColorStop(1, mescola(base, -0.14));
+function logoSopraCerchio(img, cx, cy, r, maxLarg){
+  const d = misura(img);
+  if(!d[0] || !d[1]) return;
+  const altMax = 2 * r * 1.14;
+  const largMax = maxLarg || altMax;          // uno stendardo può allargarsi di più
+  const n = analizzaLogo(img);
+  let src = img, sx = 0, sy = 0, sw = d[0], sh = d[1], s;
+  if(n){
+    src = n.sorgente; sx = n.sx; sy = n.sy; sw = n.sw; sh = n.sh;
+    const areaObiettivo = 2.84 * r * r;       // stessa area occupata per tutti
+    s = Math.sqrt(areaObiettivo / (sw * sh * n.densita));
+    s = Math.min(s, largMax / sw, altMax / sh);
   } else {
-    g.addColorStop(0, "#232323"); g.addColorStop(0.55, "#131313"); g.addColorStop(1, "#050505");
+    s = Math.min(largMax / sw, altMax / sh);
   }
-  ctx.fillStyle = g; ctx.fillRect(0, 0, L.W, L.H);
+  ctx.drawImage(src, sx, sy, sw, sh, cx - sw * s / 2, cy - sh * s / 2, sw * s, sh * s);
+}
 
-  ctx.strokeStyle = T.gesso; ctx.lineWidth = 2.5;
-  ctx.strokeRect(46, L.FY, 988, L.FH);
-  const r = 34, giu = L.FY + L.FH;
-  const ang = [[46, L.FY, 0], [1034, L.FY, 0.5], [1034, giu, 1], [46, giu, 1.5]];
-  ang.forEach(function(a){
+/* ================= SISTEMA GRAFICO =================
+   Cornice nera con fregi agli angoli, fondo giallo con le righe del campo,
+   fascia centrale e testi in oro metallico. */
+const ORO_CHIARO = "#FAD766", ORO = "#C89B3C", ORO_SCURO = "#8C6319";
+const GIALLO_F = "#F1C419", NERO = "#0D0D0D", CREMA = ORO_CHIARO;
+
+const TEMI = {
+  giallo: { fondo: GIALLO_F, cornice: NERO, fascia: NERO,
+            inch: NERO, muto: "rgba(13,13,13,0.78)", acc: ORO,
+            suFascia: CREMA, accFascia: ORO_CHIARO, righe: "rgba(255,255,255,0.17)",
+            piatto: "rgba(0,0,0,0.30)", pannello: NERO, bordoPan: ORO },
+  scuro:  { fondo: NERO, cornice: NERO, fascia: GIALLO_F,
+            inch: CREMA, muto: "rgba(250,215,102,0.75)", acc: ORO_CHIARO,
+            suFascia: NERO, accFascia: "rgba(13,13,13,0.78)", righe: "rgba(255,255,255,0.07)",
+            piatto: "rgba(0,0,0,0.35)", pannello: "rgba(250,215,102,0.07)", bordoPan: ORO }
+};
+let T = TEMI.giallo;
+let mutoAtt = T.muto;
+
+/* Fregio d'angolo: archi concentrici alla scavatura, così restano sul nero. */
+function fregio(ccx, ccy, S, diag){
+  const a = diag * Math.PI / 180;
+  ctx.save();
+  ctx.strokeStyle = ORO; ctx.lineCap = "round";
+  const archi = [[1.055, 22, 0.030], [1.115, 13, 0.017]];
+  archi.forEach(function(A){
+    ctx.lineWidth = Math.max(1.6, S * A[2]);
     ctx.beginPath();
-    ctx.arc(a[0], a[1], r, a[2] * Math.PI, (a[2] + 0.5) * Math.PI);
+    ctx.arc(ccx, ccy, S * A[0], a - A[1] * Math.PI / 180, a + A[1] * Math.PI / 180);
     ctx.stroke();
+  });
+  // riccioli alle estremità dell'arco principale
+  const r = S * 1.055, d = 22 * Math.PI / 180, cr = S * 0.075;
+  [-1, 1].forEach(function(v){
+    const ang = a + v * d;
+    const px = ccx + r * Math.cos(ang), py = ccy + r * Math.sin(ang);
+    ctx.lineWidth = Math.max(1.5, S * 0.022);
+    ctx.beginPath();
+    ctx.arc(px + cr * Math.cos(ang + v * 1.5), py + cr * Math.sin(ang + v * 1.5),
+            cr, 0, Math.PI * 1.6);
+    ctx.stroke();
+  });
+  ctx.restore();
+}
+
+/* Righe del campo appena accennate sul fondo. */
+function righeCampo(x0, y0, x1, y1){
+  ctx.strokeStyle = T.righe; ctx.lineWidth = 3;
+  const w = x1 - x0, h = y1 - y0, cx = (x0 + x1) / 2;
+  [[y0, 1], [y1, -1]].forEach(function(b){
+    const by = b[0], v = b[1];
+    ctx.strokeRect(cx - w * 0.30, by, w * 0.60, v * h * 0.135);   // area di rigore
+    ctx.strokeRect(cx - w * 0.145, by, w * 0.29, v * h * 0.055);  // area piccola
   });
 }
 
-function piede(){
-  const t = [CFG_handle(), CFG_tag()].filter(Boolean).join("   ·   ");
-  scrivi(t, 540, L.piede, L.piedeS, mutoAtt, ARIAL, 6);
+/* Angolo scavato: il campo viene morso da un quarto di cerchio, il nero resta
+   e ospita il fregio dorato, dove l'oro risalta davvero. */
+function angoloScavato(cx, cy, S, sx, sy){
+  const ccx = cx + sx * S, ccy = cy + sy * S;
+  const a0 = Math.atan2(-sy, 0), a1 = Math.atan2(0, -sx);
+  let d = a1 - a0;
+  while(d > Math.PI) d -= 2 * Math.PI;
+  while(d < -Math.PI) d += 2 * Math.PI;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  ctx.lineTo(cx + sx * S, cy);
+  for(let i = 0; i <= 28; i++){
+    const a = a0 + d * i / 28;
+    ctx.lineTo(ccx + S * Math.cos(a), ccy + S * Math.sin(a));
+  }
+  ctx.closePath();
+  ctx.fillStyle = T.cornice; ctx.fill();
 }
+
+function sfondo(){
+  const b = L.bordo, S = L.angolo;
+  ctx.fillStyle = T.cornice; ctx.fillRect(0, 0, L.W, L.H);
+  ctx.fillStyle = T.fondo;
+  ctx.fillRect(b, b, L.W - 2 * b, L.H - 2 * b);
+  righeCampo(b, b, L.W - b, L.H - b);
+  ctx.strokeStyle = ORO; ctx.lineWidth = 2;
+  ctx.strokeRect(b + 7, b + 7, L.W - 2 * b - 14, L.H - 2 * b - 14);
+  const ang = [[b, b, 1, 1, 0], [L.W - b, b, -1, 1, 1],
+               [L.W - b, L.H - b, -1, -1, 2], [b, L.H - b, 1, -1, 3]];
+  ang.forEach(function(a){ angoloScavato(a[0], a[1], S, a[2], a[3]); });
+  fregio(b + S, b + S, S, 225);
+  fregio(L.W - b - S, b + S, S, 315);
+  fregio(L.W - b - S, L.H - b - S, S, 45);
+  fregio(b + S, L.H - b - S, S, 135);
+}
+
+/* Fascia orizzontale a tutta larghezza. */
+function fascia(y, h){
+  const b = L.bordo;
+  ctx.fillStyle = T.fascia;
+  ctx.fillRect(b, y, L.W - 2 * b, h);
+  ctx.strokeStyle = ORO; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(b, y); ctx.lineTo(L.W - b, y);
+  ctx.moveTo(b, y + h); ctx.lineTo(L.W - b, y + h); ctx.stroke();
+}
+
+/* Testo in oro metallico con contorno e ombra. */
+function testoOro(t, x, y, size, ls){
+  if(!t) return;
+  const g = ctx.createLinearGradient(0, y - size * 0.78, 0, y + size * 0.10);
+  g.addColorStop(0, ORO_CHIARO); g.addColorStop(0.45, ORO);
+  g.addColorStop(0.72, ORO_CHIARO); g.addColorStop(1, ORO_SCURO);
+  ctx.save();
+  ctx.shadowColor = "rgba(0,0,0,0.45)";
+  ctx.shadowBlur = size * 0.10; ctx.shadowOffsetY = size * 0.05;
+  ctx.font = size + "px Anton"; ctx.textAlign = "center";
+  if("letterSpacing" in ctx) ctx.letterSpacing = (ls || 0) + "px";
+  ctx.fillStyle = g; ctx.fillText(t, x, y);
+  ctx.shadowColor = "transparent";
+  ctx.lineWidth = Math.max(1.5, size * 0.018); ctx.strokeStyle = "rgba(0,0,0,0.85)";
+  ctx.strokeText(t, x, y);
+  if("letterSpacing" in ctx) ctx.letterSpacing = "0px";
+  ctx.restore();
+}
+
+/* Pannello scuro bordato d'oro. */
+function pannello(x, y, w, h){
+  rett(x, y, w, h, 12);
+  ctx.fillStyle = T.pannello; ctx.fill();
+  ctx.strokeStyle = T.bordoPan; ctx.lineWidth = 2.5; ctx.stroke();
+  rett(x + 7, y + 7, w - 14, h - 14, 8);
+  ctx.strokeStyle = "rgba(200,155,60,0.45)"; ctx.lineWidth = 1.5; ctx.stroke();
+}
+
+function piede(){
+  const t = [CFG_handle(), CFG_tag()].filter(Boolean).join("   \u00b7   ");
+  scrivi(t, 540, L.piede, L.piedeS, mutoAtt, SERIF, 5);
+}
+
 const CFG_handle = () => ($("c-handle").value || "").trim();
 const CFG_tag    = () => ($("c-tag").value || "").trim();
 const val = i => ($(i).value || "").trim();
 
 /* ---------- grafica GOL ---------- */
 function disegnaGol(){
-  T = TEMI.scuro; mutoAtt = MUTO;
+  T = TEMI.scuro; mutoAtt = T.muto;
   sfondo();
-  scrivi("GOL!", 540, 544, 228, GIALLO, "Anton", 4);
+  testoOro("GOL!", 540, 520, 212, 4);
 
-  const cx = 540, cy = 915, r = 178;
-  ctx.fillStyle = SCURO;
+  const cx = 540, cy = 915, r = 205;
+  ctx.fillStyle = "rgba(250,215,102,0.07)";
   ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
   if(foto) cerchioImmagine(foto, cx, cy, r);
-  else scrivi("FOTO", cx, cy + 9, 24, MUTO, ARIAL, 4);
-  ctx.strokeStyle = "rgba(255,255,255,0.65)"; ctx.lineWidth = 2.5;
+  else scriviCentratoV("FOTO", cx, cy, 26, "rgba(250,215,102,0.55)", ARIAL, 4);
+  ctx.strokeStyle = ORO; ctx.lineWidth = 3;
   ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
 
-  ctx.fillStyle = GIALLO;
-  ctx.beginPath(); ctx.arc(694, 785, 58, 0, Math.PI * 2); ctx.fill();
-  scrivi(val("g-num"), 694, 806, 60, SU_GIALLO);
+  ctx.fillStyle = ORO_CHIARO;
+  ctx.beginPath(); ctx.arc(685, 770, 60, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = NERO; ctx.lineWidth = 3; ctx.stroke();
+  scriviCentratoV(val("g-num"), 685, 770, 60, NERO);
 
-  scriviLimitato(val("g-nome").toUpperCase(), 540, 1230, 104, 60, 900, INCH, "Anton", 1);
+  scriviLimitato(val("g-nome").toUpperCase(), 540, 1300, 104, 60, 880, T.inch, "Anton", 1);
 
-  const by = 1352;
-  ctx.strokeStyle = "rgba(255,255,255,0.5)"; ctx.lineWidth = 2.5;
-  rett(170, by, 740, 190, 10); ctx.stroke();
-  ctx.fillStyle = GIALLO; rett(478, by - 27, 124, 54, 27); ctx.fill();
+  const by = 1400, bh = 240;
+  pannello(140, by, 800, bh);
+  ctx.fillStyle = ORO_CHIARO; rett(478, by - 28, 124, 56, 28); ctx.fill();
+  ctx.strokeStyle = NERO; ctx.lineWidth = 3; ctx.stroke();
   const m = val("g-min");
-  scriviCentratoV(m ? m + "'" : "", 540, by, 40, SU_GIALLO);
-
-  rigaPunteggio(val("g-casa"), val("g-gc"), val("g-go"), val("g-osp"), by + 118);
+  scriviCentratoV(m ? m + "'" : "", 540, by, 40, NERO);
+  rigaPunteggio(val("g-casa"), val("g-gc"), val("g-go"), val("g-osp"), by + bh * 0.66);
   piede();
 }
 
 function rigaPunteggio(casa, gc, go, osp, y){
   const pezzi = [];
-  if(casa) pezzi.push({t: casa.toUpperCase(), s: 54, c: T.inch});
-  if(gc)   pezzi.push({t: gc, s: 58, c: T.acc, cifra: true});
-  if(gc && go) pezzi.push({t: "–", s: 46, c: T.inch, centra: true});
-  if(go)   pezzi.push({t: go, s: 58, c: T.inch, cifra: true});
-  if(osp)  pezzi.push({t: osp.toUpperCase(), s: 54, c: T.inch});
+  if(casa) pezzi.push({t: casa.toUpperCase(), s: 54, c: ORO});
+  if(gc)   pezzi.push({t: gc, s: 58, c: ORO_CHIARO, cifra: true});
+  if(gc && go) pezzi.push({t: "–", s: 46, c: ORO, centra: true});
+  if(go)   pezzi.push({t: go, s: 58, c: CREMA, cifra: true});
+  if(osp)  pezzi.push({t: osp.toUpperCase(), s: 54, c: ORO});
   if(!pezzi.length) return;
   const MAXW = 680;                       // il riquadro è largo 740
   let spazio = 22, fattore = 1, tot;
@@ -497,56 +677,55 @@ function rigaPunteggio(casa, gc, go, osp, y){
 
 /* ---------- grafica MATCH DAY ---------- */
 function disegnaMd(){
-  T = $("m-invert").checked ? TEMI.giallo : TEMI.scuro;
+  T = $("m-invert").checked ? TEMI.scuro : TEMI.giallo;
   mutoAtt = T.muto;
-  sfondo(T.fondo);
-  scriviLimitato(val("m-tipo").toUpperCase(), 540, L.tipo, L.tipoS, 16, 900, mutoAtt, ARIAL, L.tipoLS);
-  scrivi("MATCH", 540, L.mdT1, L.mdTS, T.tit1, "Anton", 3);
-  scrivi("DAY",   540, L.mdT2, L.mdTS, T.tit2, "Anton", 3);
+  sfondo();
 
+  scriviLimitato(val("m-tipo").toUpperCase(), 540, L.tipo, L.tipoS, 18, 820, T.inch, SERIF, L.tipoLS);
+  scrivi("MATCH", 540, L.mdT1, L.mdTS, T.inch, "Anton", 3);
+  testoOro("DAY", 540, L.mdT2, L.mdTS, 3);
+
+  fascia(L.fasciaY, L.fasciaH);
   const cy = L.cy;
-  ctx.strokeStyle = T.gessoTenue; ctx.lineWidth = 2.5;
-  ctx.beginPath(); ctx.moveTo(46, cy); ctx.lineTo(1034, cy); ctx.stroke();
+  ctx.strokeStyle = ORO; ctx.lineWidth = 2.5;
   ctx.beginPath(); ctx.arc(540, cy, L.rCentro, 0, Math.PI * 2); ctx.stroke();
-  ctx.fillStyle = T.gessoTenue;
-  ctx.beginPath(); ctx.arc(540, cy, 7, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(L.bordo, cy); ctx.lineTo(540 - L.rCentro, cy);
+  ctx.moveTo(540 + L.rCentro, cy); ctx.lineTo(L.W - L.bordo, cy); ctx.stroke();
 
   [[250, logoCasa], [830, logoOsp]].forEach(function(p){
-    ctx.fillStyle = T.piatto;
-    ctx.beginPath(); ctx.arc(p[0], cy, L.rC, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = T.anello; ctx.lineWidth = 2.5;
-    ctx.beginPath(); ctx.arc(p[0], cy, L.rC, 0, Math.PI * 2); ctx.stroke();
-    if(p[1]) logoSopraCerchio(p[1], p[0], cy, L.rC);
+    if(p[1]) logoSopraCerchio(p[1], p[0], cy, L.rC, 2 * L.rC * 1.45);
+    else {
+      ctx.strokeStyle = "rgba(200,155,60,0.55)"; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(p[0], cy, L.rC, 0, Math.PI * 2); ctx.stroke();
+    }
   });
-  scriviCentratoV("VS", 540, cy, Math.round(L.rCentro * 0.45), T.acc);
+  scriviCentratoV("VS", 540, cy, Math.round(L.rCentro * 0.46), T.accFascia);
 
-  scriviLimitato(val("m-casa").toUpperCase(), 250, L.nomi, L.nomiS, 28, L.nomiW, T.inch, "Anton", 1);
-  scriviLimitato(val("m-osp").toUpperCase(),  830, L.nomi, L.nomiS, 28, L.nomiW, T.inch, "Anton", 1);
+  scriviLimitato(val("m-casa").toUpperCase(), 250, L.nomi, L.nomiS, 30, L.nomiW, T.inch, "Anton", 1);
+  scriviLimitato(val("m-osp").toUpperCase(),  830, L.nomi, L.nomiS, 30, L.nomiW, T.inch, "Anton", 1);
 
   const by = L.box, bh = L.boxH;
-  rett(140, by, 800, bh, 10);
-  ctx.strokeStyle = T.gesso; ctx.lineWidth = 2.5; ctx.stroke();
-  ctx.strokeStyle = T.divisori; ctx.lineWidth = 2;
+  pannello(140, by, 800, bh);
+  ctx.strokeStyle = "rgba(200,155,60,0.55)"; ctx.lineWidth = 1.5;
   [406, 674].forEach(function(x){
     ctx.beginPath();
-    ctx.moveTo(x, by + bh * 0.14); ctx.lineTo(x, by + bh * 0.86); ctx.stroke();
+    ctx.moveTo(x, by + bh * 0.20); ctx.lineTo(x, by + bh * 0.80); ctx.stroke();
   });
   const col = [[273, "DATA", val("m-data")], [540, "CALCIO D'INIZIO", val("m-ora")],
                [807, "STADIO", val("m-stadio")]];
-  const LARG = 230;
   col.forEach(function(c){
-    scriviLimitato(c[1], c[0], by + bh * 0.355, L.labS, L.labS, LARG, T.acc, ARIAL, 3);
-    scriviLimitato(c[2].toUpperCase(), c[0], by + bh * 0.69, L.infoS, 24, LARG, T.inch, "Anton", 0);
+    scriviLimitato(c[1], c[0], by + bh * 0.36, L.labS, L.labS, 230, ORO, SERIF, 3);
+    scriviLimitato(c[2].toUpperCase(), c[0], by + bh * 0.70, L.infoS, 24, 230, CREMA, "Anton", 0);
   });
   piede();
 }
 
-/* ---------- grafica RISULTATO (intervallo / fine partita) ---------- */
 function punteggioGrande(gc, go, x, y){
   const pezzi = [];
-  if(gc) pezzi.push({t: gc, s: L.punt, c: T.inch, cifra: true});
-  if(gc && go) pezzi.push({t: "–", s: Math.round(L.punt * 0.69), c: T.acc, centra: true});
-  if(go) pezzi.push({t: go, s: L.punt, c: T.inch, cifra: true});
+  if(gc) pezzi.push({t: gc, s: L.punt, c: T.suFascia, cifra: true});
+  if(gc && go) pezzi.push({t: "–", s: Math.round(L.punt * 0.69), c: T.accFascia, centra: true});
+  if(go) pezzi.push({t: go, s: L.punt, c: T.suFascia, cifra: true});
   if(!pezzi.length) return;
   const MAXW = Math.round(L.rCentro * 1.82);
   let f = 1, tot = 0;
@@ -573,40 +752,41 @@ function punteggioGrande(gc, go, x, y){
 }
 
 function disegnaRis(){
-  T = $("r-invert").checked ? TEMI.giallo : TEMI.scuro;
+  T = $("r-invert").checked ? TEMI.scuro : TEMI.giallo;
   mutoAtt = T.muto;
-  sfondo(T.fondo);
-  scriviLimitato(val("m-tipo").toUpperCase(), 540, L.tipo, L.tipoS, 16, 900, mutoAtt, ARIAL, L.tipoLS);
+  sfondo();
 
+  scriviLimitato(val("m-tipo").toUpperCase(), 540, L.tipo, L.tipoS, 18, 820, T.inch, SERIF, L.tipoLS);
   const predefinito = $("r-momento").value === "primo" ? "INTERVALLO" : "FINALE";
-  scriviLimitato((val("r-titolo") || predefinito).toUpperCase(),
-                 540, L.risT, L.risTS, 70, 900, T.tit2, "Anton", 2);
+  const titolo = (val("r-titolo") || predefinito).toUpperCase();
+  testoOro(titolo, 540, L.risT, adattaTesto(titolo, L.risTS, 860, "Anton", 2), 2);
 
+  fascia(L.fasciaY, L.fasciaH);
   const cy = L.cy;
-  ctx.strokeStyle = T.gessoTenue; ctx.lineWidth = 2.5;
-  ctx.beginPath(); ctx.moveTo(46, cy); ctx.lineTo(1034, cy); ctx.stroke();
+  ctx.strokeStyle = ORO; ctx.lineWidth = 2.5;
   ctx.beginPath(); ctx.arc(540, cy, L.rCentro, 0, Math.PI * 2); ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(L.bordo, cy); ctx.lineTo(540 - L.rCentro, cy);
+  ctx.moveTo(540 + L.rCentro, cy); ctx.lineTo(L.W - L.bordo, cy); ctx.stroke();
 
   [[250, logoCasa], [830, logoOsp]].forEach(function(p){
-    ctx.fillStyle = T.piatto;
-    ctx.beginPath(); ctx.arc(p[0], cy, L.rC, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = T.anello; ctx.lineWidth = 2.5;
-    ctx.beginPath(); ctx.arc(p[0], cy, L.rC, 0, Math.PI * 2); ctx.stroke();
-    if(p[1]) logoSopraCerchio(p[1], p[0], cy, L.rC);
+    if(p[1]) logoSopraCerchio(p[1], p[0], cy, L.rC, 2 * L.rC * 1.16);
+    else {
+      ctx.strokeStyle = "rgba(200,155,60,0.55)"; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(p[0], cy, L.rC, 0, Math.PI * 2); ctx.stroke();
+    }
   });
-
   punteggioGrande(val("r-gc"), val("r-go"), 540, cy + Math.round(L.punt * 0.35));
 
-  scriviLimitato(val("m-casa").toUpperCase(), 250, L.nomi, L.nomiS, 28, L.nomiW, T.inch, "Anton", 1);
-  scriviLimitato(val("m-osp").toUpperCase(),  830, L.nomi, L.nomiS, 28, L.nomiW, T.inch, "Anton", 1);
+  scriviLimitato(val("m-casa").toUpperCase(), 250, L.nomi, L.nomiS, 30, L.nomiW, T.inch, "Anton", 1);
+  scriviLimitato(val("m-osp").toUpperCase(),  830, L.nomi, L.nomiS, 30, L.nomiW, T.inch, "Anton", 1);
 
   const by = L.box, bh = L.boxH;
-  ctx.strokeStyle = T.gesso; ctx.lineWidth = 2.5;
-  rett(140, by, 800, bh, 10); ctx.stroke();
+  pannello(140, by, 800, bh);
   const marc = val("r-marcatori");
   if(marc){
-    scrivi("MARCATORI", 540, by + bh * 0.355, L.labS, T.acc, ARIAL, 3);
-    scriviLimitato(marc.toUpperCase(), 540, by + bh * 0.69, L.marcS, 22, 720, T.inch, "Anton", 0);
+    scrivi("MARCATORI", 540, by + bh * 0.36, L.labS, ORO, SERIF, 3);
+    scriviLimitato(marc.toUpperCase(), 540, by + bh * 0.70, L.marcS, 22, 700, CREMA, "Anton", 0);
   }
   piede();
 }
@@ -901,52 +1081,46 @@ collegaFile("m-losp",  "m-losp-l",  "Stemma ospite",  i => logoOsp = i);
 const CICLO = 2400, DURATA = 7200;          // millisecondi
 const BUCO = {cx: 540, cy: 930, r: 225};
 
-function disegnaGolAnimato(t){               // t va da 0 a 1 dentro il ciclo
-  T = TEMI.scuro; mutoAtt = MUTO;
+function disegnaGolAnimato(tt){              // tt va da 0 a 1 dentro il ciclo
+  T = TEMI.scuro; mutoAtt = T.muto;
   sfondo();
 
-  // scritta che trema: somme di seni a frequenze intere, così il loop è continuo
-  const dx  = 8 * Math.sin(2*Math.PI*7*t) + 5 * Math.sin(2*Math.PI*11*t + 1.3);
-  const dy  = 6 * Math.sin(2*Math.PI*9*t + 0.7) + 4 * Math.sin(2*Math.PI*13*t + 2.1);
-  const rot = (1.8 * Math.sin(2*Math.PI*5*t + 0.4) + Math.sin(2*Math.PI*8*t + 1.9)) * Math.PI / 180;
-  const sca = 1 + 0.025 * Math.sin(2*Math.PI*3*t);
+  const dx  = 8 * Math.sin(2*Math.PI*7*tt) + 5 * Math.sin(2*Math.PI*11*tt + 1.3);
+  const dy  = 6 * Math.sin(2*Math.PI*9*tt + 0.7) + 4 * Math.sin(2*Math.PI*13*tt + 2.1);
+  const rot = (1.8 * Math.sin(2*Math.PI*5*tt + 0.4) + Math.sin(2*Math.PI*8*tt + 1.9)) * Math.PI / 180;
+  const sca = 1 + 0.025 * Math.sin(2*Math.PI*3*tt);
   ctx.save();
   ctx.translate(540 + dx, 470 + dy); ctx.rotate(rot); ctx.scale(sca, sca);
   ctx.font = "200px Anton";
   const largh = ctx.measureText("GOOOOL!").width || 1;
-  ctx.font = (200 * 880 / largh) + "px Anton";
-  ctx.fillStyle = GIALLO; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-  if("letterSpacing" in ctx) ctx.letterSpacing = "4px";
-  ctx.fillText("GOOOOL!", 0, 0);
+  testoOro("GOOOOL!", 0, 0, 200 * 880 / largh, 4);
   ctx.restore();
-  if("letterSpacing" in ctx) ctx.letterSpacing = "0px";
 
-  const b = BUCO;
-  ctx.fillStyle = SCURO;
-  ctx.beginPath(); ctx.arc(b.cx, b.cy, b.r, 0, Math.PI * 2); ctx.fill();
-  if(foto) cerchioImmagine(foto, b.cx, b.cy, b.r);
-  else scrivi("CLIP", b.cx, b.cy + 9, 26, MUTO, ARIAL, 4);
-
-  ctx.strokeStyle = "rgba(255,212,0," + (0.6 * (1 - t)).toFixed(3) + ")";
+  const cx = 540, cy = 915, r = 205;
+  ctx.fillStyle = "rgba(250,215,102,0.07)";
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+  if(foto) cerchioImmagine(foto, cx, cy, r);
+  else scriviCentratoV("CLIP", cx, cy, 26, "rgba(250,215,102,0.55)", ARIAL, 4);
+  ctx.strokeStyle = "rgba(250,215,102," + (0.85 * (1 - tt) + 0.15).toFixed(3) + ")";
   ctx.lineWidth = 4;
-  ctx.beginPath(); ctx.arc(b.cx, b.cy, b.r + 150 * t, 0, Math.PI * 2); ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx, cy, r + 150 * tt, 0, Math.PI * 2); ctx.stroke();
+  ctx.strokeStyle = ORO; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
 
-  ctx.strokeStyle = "rgba(255,255,255,0.65)"; ctx.lineWidth = 2.5;
-  ctx.beginPath(); ctx.arc(b.cx, b.cy, b.r, 0, Math.PI * 2); ctx.stroke();
+  ctx.fillStyle = ORO_CHIARO;
+  ctx.beginPath(); ctx.arc(685, 770, 60, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = NERO; ctx.lineWidth = 3; ctx.stroke();
+  scriviCentratoV(val("g-num"), 685, 770, 60, NERO);
 
-  ctx.fillStyle = GIALLO;
-  ctx.beginPath(); ctx.arc(699, 771, 58, 0, Math.PI * 2); ctx.fill();
-  scrivi(val("g-num"), 699, 792, 60, SU_GIALLO);
+  scriviLimitato(val("g-nome").toUpperCase(), 540, 1300, 104, 60, 880, T.inch, "Anton", 1);
 
-  scriviLimitato(val("g-nome").toUpperCase(), 540, 1300, 92, 56, 900, INCH, "Anton", 1);
-
-  const by = 1352;
-  ctx.strokeStyle = "rgba(255,255,255,0.5)"; ctx.lineWidth = 2.5;
-  rett(170, by, 740, 190, 10); ctx.stroke();
-  ctx.fillStyle = GIALLO; rett(478, by - 27, 124, 54, 27); ctx.fill();
+  const by = 1400, bh = 240;
+  pannello(140, by, 800, bh);
+  ctx.fillStyle = ORO_CHIARO; rett(478, by - 28, 124, 56, 28); ctx.fill();
+  ctx.strokeStyle = NERO; ctx.lineWidth = 3; ctx.stroke();
   const m = val("g-min");
-  scriviCentratoV(m ? m + "'" : "", 540, by, 40, SU_GIALLO);
-  rigaPunteggio(val("g-casa"), val("g-gc"), val("g-go"), val("g-osp"), by + 118);
+  scriviCentratoV(m ? m + "'" : "", 540, by, 40, NERO);
+  rigaPunteggio(val("g-casa"), val("g-gc"), val("g-go"), val("g-osp"), by + bh * 0.66);
   piede();
 }
 
