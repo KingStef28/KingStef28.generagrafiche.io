@@ -30,10 +30,10 @@
 
   .top{position:sticky;top:0;z-index:10;background:var(--nero);
     padding:14px 0 10px;border-bottom:1px solid var(--bordo)}
-  .tabs{display:flex;gap:8px;margin-bottom:12px}
-  .tab{flex:1;padding:13px 4px;border:1px solid var(--bordo);background:#111;
-    color:var(--muto);border-radius:10px;font:600 12.5px/1 inherit;letter-spacing:.08em;
-    text-transform:uppercase;cursor:pointer}
+  .tabs{display:flex;gap:6px;margin-bottom:12px}
+  .tab{flex:1 1 0;min-width:0;padding:13px 2px;border:1px solid var(--bordo);background:#111;
+    color:var(--muto);border-radius:10px;font:600 clamp(9px,2.9vw,12px)/1 inherit;
+    letter-spacing:.01em;text-transform:uppercase;white-space:nowrap;cursor:pointer}
   .check{display:flex;align-items:center;gap:11px;margin:4px 0 14px;padding:13px 12px;
     background:var(--pannello);border:1px solid var(--bordo);border-radius:9px;cursor:pointer}
   .check input{width:22px;height:22px;accent-color:var(--giallo);flex:0 0 auto}
@@ -51,14 +51,15 @@
   .f{display:block;flex:1;margin-bottom:12px}
   .f span{display:block;margin-bottom:6px;font-size:12px;letter-spacing:.1em;
     text-transform:uppercase;color:var(--muto)}
-  .f input, .f select{width:100%;padding:13px 12px;background:var(--pannello);
+  .f textarea{min-height:190px;resize:vertical;line-height:1.55}
+  .f input, .f select, .f textarea{width:100%;padding:13px 12px;background:var(--pannello);
     border:1px solid var(--bordo);border-radius:9px;color:var(--inch);
     font:400 16px/1.2 inherit;-webkit-appearance:none;appearance:none}
   .f select{background-image:linear-gradient(45deg,transparent 50%,var(--muto) 50%),
     linear-gradient(135deg,var(--muto) 50%,transparent 50%);
     background-position:calc(100% - 20px) 22px,calc(100% - 14px) 22px;
     background-size:6px 6px,6px 6px;background-repeat:no-repeat}
-  .f input:focus, .f select:focus{outline:none;border-color:var(--giallo)}
+  .f input:focus, .f select:focus, .f textarea:focus{outline:none;border-color:var(--giallo)}
   .f.mini{flex:0 0 96px}
 
   .file{display:block;margin-bottom:12px}
@@ -95,8 +96,9 @@
 
   <div class="top">
     <div class="tabs">
-      <button class="tab on" id="t-gol" type="button">Gol</button>
-      <button class="tab" id="t-md" type="button">Match day</button>
+      <button class="tab on" id="t-md" type="button">Match day</button>
+      <button class="tab" id="t-conv" type="button">Convocati</button>
+      <button class="tab" id="t-gol" type="button">Gol</button>
       <button class="tab" id="t-ris" type="button">Risultato</button>
     </div>
     <div class="stage"><canvas id="cv" width="1080" height="1920"></canvas></div>
@@ -166,11 +168,6 @@
 
   <!-- ---------- RISULTATO ---------- -->
   <div id="p-ris" class="nascosto">
-    <label class="check" id="risInv">
-      <input type="checkbox" id="r-invert">
-      <span>Inverti: fondo nero</span>
-    </label>
-
     <div class="sez">Momento</div>
     <label class="f"><span>Quando</span>
       <select id="r-momento">
@@ -199,6 +196,18 @@
       <input id="c-handle" type="text" autocomplete="off"></label>
     <label class="f"><span>Hashtag</span>
       <input id="c-tag" type="text" autocomplete="off"></label>
+  </div>
+
+  <!-- ---------- CONVOCATI ---------- -->
+  <div id="p-conv" class="nascosto">
+    <div class="sez">Elenco</div>
+    <label class="f"><span>Titolo</span>
+      <input id="c-titolo" type="text" placeholder="Convocati" autocomplete="off"></label>
+    <label class="f"><span>Un giocatore per riga</span>
+      <textarea id="c-lista" placeholder="Rossi&#10;Bianchi&#10;Verdi&#10;&#10;oppure con il numero:&#10;10 Rossi&#10;7 Bianchi"></textarea></label>
+    <p class="nota">Vengono messi in ordine alfabetico da soli e distribuiti su due colonne.
+      Se scrivi il numero di maglia davanti al cognome, viene mostrato in oro.
+      Stemma, tipo di partita e data si prendono dalla scheda Match day.</p>
   </div>
 
   <label class="check nascosto" id="postbox">
@@ -257,6 +266,8 @@ const FORMATI = {
             fasciaY:790, fasciaH:360, cy:970, rC:138, rCentro:178,
             nomi:1292, nomiS:50, nomiW:400,
             box:1400, boxH:240, infoS:40, labS:22, marcS:38, punt:118,
+            convLogo:252, convLogoR:108, convTipo:430,
+            convT:590, convTS:120, listaY:720, listaH:900,
             piede:1756, piedeS:27 },
   post:   { W:1080, H:1350, bordo:40, fregio:68, angolo:156,
             tipo:158, tipoS:27, tipoLS:7,
@@ -264,13 +275,15 @@ const FORMATI = {
             fasciaY:560, fasciaH:290, cy:705, rC:110, rCentro:142,
             nomi:948, nomiS:44, nomiW:380,
             box:1020, boxH:200, infoS:34, labS:20, marcS:32, punt:96,
+            convLogo:196, convLogoR:88, convTipo:330,
+            convT:450, convTS:94, listaY:545, listaH:620,
             piede:1268, piedeS:23 }
 };
 let L = FORMATI.storia;
 
 const $ = i => document.getElementById(i);
 const cv = $("cv"), ctx = cv.getContext("2d");
-let scheda = "gol";
+let scheda = "md";
 let foto = null, logoCasa = null, logoOsp = null;
 
 /* ---------- utilità di disegno ---------- */
@@ -721,11 +734,11 @@ function disegnaMd(){
   piede();
 }
 
-function punteggioGrande(gc, go, x, y){
+function punteggioGrande(gc, go, x, y, colCifre, colTratto){
   const pezzi = [];
-  if(gc) pezzi.push({t: gc, s: L.punt, c: T.suFascia, cifra: true});
-  if(gc && go) pezzi.push({t: "–", s: Math.round(L.punt * 0.69), c: T.accFascia, centra: true});
-  if(go) pezzi.push({t: go, s: L.punt, c: T.suFascia, cifra: true});
+  if(gc) pezzi.push({t: gc, s: L.punt, c: colCifre || T.suFascia, cifra: true});
+  if(gc && go) pezzi.push({t: "–", s: Math.round(L.punt * 0.69), c: colTratto || T.accFascia, centra: true});
+  if(go) pezzi.push({t: go, s: L.punt, c: colCifre || T.suFascia, cifra: true});
   if(!pezzi.length) return;
   const MAXW = Math.round(L.rCentro * 1.82);
   let f = 1, tot = 0;
@@ -752,7 +765,7 @@ function punteggioGrande(gc, go, x, y){
 }
 
 function disegnaRis(){
-  T = $("r-invert").checked ? TEMI.scuro : TEMI.giallo;
+  T = TEMI.scuro;                    // questa grafica è sempre nera
   mutoAtt = T.muto;
   sfondo();
 
@@ -761,7 +774,6 @@ function disegnaRis(){
   const titolo = (val("r-titolo") || predefinito).toUpperCase();
   testoOro(titolo, 540, L.risT, adattaTesto(titolo, L.risTS, 860, "Anton", 2), 2);
 
-  fascia(L.fasciaY, L.fasciaH);
   const cy = L.cy;
   ctx.strokeStyle = ORO; ctx.lineWidth = 2.5;
   ctx.beginPath(); ctx.arc(540, cy, L.rCentro, 0, Math.PI * 2); ctx.stroke();
@@ -776,7 +788,8 @@ function disegnaRis(){
       ctx.beginPath(); ctx.arc(p[0], cy, L.rC, 0, Math.PI * 2); ctx.stroke();
     }
   });
-  punteggioGrande(val("r-gc"), val("r-go"), 540, cy + Math.round(L.punt * 0.35));
+  punteggioGrande(val("r-gc"), val("r-go"), 540, cy + Math.round(L.punt * 0.35),
+                  T.inch, T.acc);
 
   scriviLimitato(val("m-casa").toUpperCase(), 250, L.nomi, L.nomiS, 30, L.nomiW, T.inch, "Anton", 1);
   scriviLimitato(val("m-osp").toUpperCase(),  830, L.nomi, L.nomiS, 30, L.nomiW, T.inch, "Anton", 1);
@@ -791,10 +804,83 @@ function disegnaRis(){
   piede();
 }
 
+
+/* Elenco convocati: una riga per giocatore, numero facoltativo davanti. */
+function elencoConvocati(){
+  const righe = ($("c-lista").value || "").split("\n")
+    .map(function(r){ return r.trim(); }).filter(Boolean);
+  const voci = righe.map(function(r){
+    const m = r.match(/^(\d{1,2})\s*[.\-)\s]\s*(.+)$/);
+    return m ? {num: m[1], nome: m[2].trim()} : {num: "", nome: r};
+  });
+  voci.sort(function(a, b){
+    return a.nome.localeCompare(b.nome, "it", {sensitivity: "base"});
+  });
+  return voci;
+}
+
+function disegnaConv(){
+  T = TEMI.scuro;                    // questa grafica è sempre nera
+  mutoAtt = T.muto;
+  sfondo();
+  // stemma della società in cima
+  if(logoCasa) logoSopraCerchio(logoCasa, 540, L.convLogo, L.convLogoR);
+  else {
+    ctx.strokeStyle = "rgba(200,155,60,0.45)"; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(540, L.convLogo, L.convLogoR, 0, Math.PI * 2); ctx.stroke();
+  }
+  scriviLimitato(val("m-tipo").toUpperCase(), 540, L.convTipo, L.tipoS, 18, 820, T.inch, SERIF, L.tipoLS);
+  const tit = (val("c-titolo") || "CONVOCATI").toUpperCase();
+  testoOro(tit, 540, L.convT, adattaTesto(tit, L.convTS, 860, "Anton", 2), 2);
+  // giorno della partita, sotto al titolo
+  scriviLimitato(val("m-data").toUpperCase(), 540, L.convT + L.convTS * 0.55,
+                 L.tipoS, 16, 820, T.inch, SERIF, L.tipoLS);
+
+  const px = 110, pw = 860, cw = pw / 2;
+  const voci = elencoConvocati();
+  const centro = L.listaY + L.listaH / 2;
+
+  if(!voci.length){
+    pannello(px, L.listaY, pw, L.listaH);
+    piede(); return;
+  }
+
+  // il pannello si stringe sull'elenco: con pochi nomi niente vuoti enormi
+  const nRighe = Math.ceil(voci.length / 2);
+  const lh = Math.min(L.listaH * 0.082, (L.listaH * 0.85) / nRighe);
+  const pad = Math.max(34, lh * 0.62);
+  const ph = Math.min(L.listaH, nRighe * lh + 2 * pad);
+  const py = centro - ph / 2;
+  pannello(px, py, pw, ph);
+
+  const fs = Math.max(17, Math.round(lh * 0.66));
+  const conNum = voci.some(function(v){ return v.num; });
+  const y0 = py + (ph - nRighe * lh) / 2 + lh * 0.5;
+  const colx = [px + cw * 0.5, px + cw * 1.5];
+
+  voci.forEach(function(v, i){
+    const c = i < nRighe ? 0 : 1;
+    const y = y0 + (i < nRighe ? i : i - nRighe) * lh;
+    const nome = v.nome.toUpperCase();
+    if(conNum){
+      if(v.num) scrivi(v.num, colx[c] - cw * 0.25, y + centroInk(v.num, fs, "Anton", 0),
+                       fs, ORO, "Anton", 0, "right");
+      const s = adattaTesto(nome, fs, cw * 0.64, "Anton", 0);
+      scrivi(nome, colx[c] - cw * 0.16, y + centroInk(nome, s, "Anton", 0),
+             s, ORO_CHIARO, "Anton", 0, "left");
+    } else {
+      const s = adattaTesto(nome, fs, cw * 0.82, "Anton", 0);
+      scriviCentratoV(nome, colx[c], y, s, ORO_CHIARO);
+    }
+  });
+  piede();
+}
+
 function disegna(){
   if(scheda === "gol") disegnaGol();
   else if(scheda === "md") disegnaMd();
-  else disegnaRis();
+  else if(scheda === "ris") disegnaRis();
+  else disegnaConv();
 }
 
 /* ---------- interazione ---------- */
@@ -803,9 +889,11 @@ function apri(nome){
   $("t-gol").classList.toggle("on", nome === "gol");
   $("t-md").classList.toggle("on", nome === "md");
   $("t-ris").classList.toggle("on", nome === "ris");
+  $("t-conv").classList.toggle("on", nome === "conv");
   $("p-gol").classList.toggle("nascosto", nome !== "gol");
   $("p-md").classList.toggle("nascosto", nome !== "md");
   $("p-ris").classList.toggle("nascosto", nome !== "ris");
+  $("p-conv").classList.toggle("nascosto", nome !== "conv");
   $("genvid").classList.toggle("nascosto", nome !== "gol");
   $("codecbox").classList.toggle("nascosto", nome !== "gol");
   $("postbox").classList.toggle("nascosto", nome === "gol");
@@ -814,6 +902,7 @@ function apri(nome){
 $("t-gol").onclick = () => apri("gol");
 $("t-md").onclick  = () => apri("md");
 $("t-ris").onclick = () => apri("ris");
+$("t-conv").onclick = () => apri("conv");
 
 document.querySelectorAll("input[type=text]").forEach(function(i){ i.oninput = disegna; });
 
@@ -1270,7 +1359,8 @@ function rendiFormato(nome){
 }
 
 $("gen").onclick = function(){
-  const base = scheda === "gol" ? "gol" : (scheda === "md" ? "match-day" : "risultato");
+  const base = scheda === "gol" ? "gol" : (scheda === "md" ? "match-day"
+               : (scheda === "ris" ? "risultato" : "convocati"));
   const doppio = scheda !== "gol" && $("c-post").checked;
   const uscite = [];
   try {
@@ -1307,11 +1397,12 @@ function mostraDiagnostica(){
 $("codec").onchange = mostraDiagnostica;
 $("r-momento").onchange = disegna;
 $("m-invert").onchange = disegna;
-$("r-invert").onchange = disegna;
+$("c-lista").oninput = disegna;
 
 $("c-handle").value = CFG.handle;
 $("c-tag").value = CFG.hashtag;
 mostraDiagnostica();
+apri("md");
 
 if(document.fonts && document.fonts.load){
   document.fonts.load("100px Anton").then(disegna).catch(disegna);
