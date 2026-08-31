@@ -30,9 +30,9 @@
 
   .top{position:sticky;top:0;z-index:10;background:var(--nero);
     padding:14px 0 10px;border-bottom:1px solid var(--bordo)}
-  .tabs{display:flex;gap:6px;margin-bottom:12px}
+  .tabs{display:flex;gap:5px;margin-bottom:12px}
   .tab{flex:1 1 0;min-width:0;padding:13px 2px;border:1px solid var(--bordo);background:#111;
-    color:var(--muto);border-radius:10px;font:600 clamp(9px,2.9vw,12px)/1 inherit;
+    color:var(--muto);border-radius:10px;font:600 clamp(8px,2.6vw,12px)/1 inherit;
     letter-spacing:.01em;text-transform:uppercase;white-space:nowrap;cursor:pointer}
   .check{display:flex;align-items:center;gap:11px;margin:4px 0 14px;padding:13px 12px;
     background:var(--pannello);border:1px solid var(--bordo);border-radius:9px;cursor:pointer}
@@ -100,6 +100,7 @@
       <button class="tab" id="t-conv" type="button">Convocati</button>
       <button class="tab" id="t-gol" type="button">Gol</button>
       <button class="tab" id="t-ris" type="button">Risultato</button>
+      <button class="tab" id="t-rosa" type="button">Rosa</button>
     </div>
     <div class="stage"><canvas id="cv" width="1080" height="1920"></canvas></div>
   </div>
@@ -210,6 +211,111 @@
       Stemma, tipo di partita e data si prendono dalla scheda Match day.</p>
   </div>
 
+  <!-- ---------- ROSA: riconferme e nuovi acquisti ---------- -->
+  <div id="p-rosa" class="nascosto">
+    <div class="sez">Annuncio</div>
+    <label class="f"><span>Tipo</span>
+      <select id="s-tipo">
+        <option value="ric">Riconferma</option>
+        <option value="new">Nuovo acquisto</option>
+      </select></label>
+    <label class="f"><span>Riga in alto</span>
+      <input id="s-stagione" type="text" placeholder="Stagione 2025/26" autocomplete="off"></label>
+
+    <label class="f"><span>Quanti giocatori</span>
+      <select id="s-quanti">
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+        <option value="8">8</option>
+      </select></label>
+    <p class="nota">Lo stemma in cima è quello caricato nella scheda Match day.
+      Con più giocatori la griglia si riorganizza da sola.</p>
+
+    <div id="g-blocco1">
+      <div class="sez">Giocatore 1</div>
+      <label class="f"><span>Nome</span>
+        <input id="s-nome1" type="text" placeholder="G. Rossi" autocomplete="off"></label>
+      <label class="f"><span>Ruolo</span>
+        <input id="s-ruolo1" type="text" placeholder="Portiere" autocomplete="off"></label>
+      <label class="file"><input id="s-foto1" type="file" accept="image/*,.gif">
+        <span id="s-foto1-l">Scegli la foto</span></label>
+    </div>
+    <div id="g-blocco2" class="nascosto">
+      <div class="sez">Giocatore 2</div>
+      <label class="f"><span>Nome</span>
+        <input id="s-nome2" type="text" placeholder="G. Rossi" autocomplete="off"></label>
+      <label class="f"><span>Ruolo</span>
+        <input id="s-ruolo2" type="text" placeholder="Portiere" autocomplete="off"></label>
+      <label class="file"><input id="s-foto2" type="file" accept="image/*,.gif">
+        <span id="s-foto2-l">Scegli la foto</span></label>
+    </div>
+    <div id="g-blocco3" class="nascosto">
+      <div class="sez">Giocatore 3</div>
+      <label class="f"><span>Nome</span>
+        <input id="s-nome3" type="text" placeholder="G. Rossi" autocomplete="off"></label>
+      <label class="f"><span>Ruolo</span>
+        <input id="s-ruolo3" type="text" placeholder="Portiere" autocomplete="off"></label>
+      <label class="file"><input id="s-foto3" type="file" accept="image/*,.gif">
+        <span id="s-foto3-l">Scegli la foto</span></label>
+    </div>
+    <div id="g-blocco4" class="nascosto">
+      <div class="sez">Giocatore 4</div>
+      <label class="f"><span>Nome</span>
+        <input id="s-nome4" type="text" placeholder="G. Rossi" autocomplete="off"></label>
+      <label class="f"><span>Ruolo</span>
+        <input id="s-ruolo4" type="text" placeholder="Portiere" autocomplete="off"></label>
+      <label class="file"><input id="s-foto4" type="file" accept="image/*,.gif">
+        <span id="s-foto4-l">Scegli la foto</span></label>
+    </div>
+    <div id="g-blocco5" class="nascosto">
+      <div class="sez">Giocatore 5</div>
+      <label class="f"><span>Nome</span>
+        <input id="s-nome5" type="text" placeholder="G. Rossi" autocomplete="off"></label>
+      <label class="f"><span>Ruolo</span>
+        <input id="s-ruolo5" type="text" placeholder="Portiere" autocomplete="off"></label>
+      <label class="file"><input id="s-foto5" type="file" accept="image/*,.gif">
+        <span id="s-foto5-l">Scegli la foto</span></label>
+    </div>
+    <div id="g-blocco6" class="nascosto">
+      <div class="sez">Giocatore 6</div>
+      <label class="f"><span>Nome</span>
+        <input id="s-nome6" type="text" placeholder="G. Rossi" autocomplete="off"></label>
+      <label class="f"><span>Ruolo</span>
+        <input id="s-ruolo6" type="text" placeholder="Portiere" autocomplete="off"></label>
+      <label class="file"><input id="s-foto6" type="file" accept="image/*,.gif">
+        <span id="s-foto6-l">Scegli la foto</span></label>
+    </div>
+    <div id="g-blocco7" class="nascosto">
+      <div class="sez">Giocatore 7</div>
+      <label class="f"><span>Nome</span>
+        <input id="s-nome7" type="text" placeholder="G. Rossi" autocomplete="off"></label>
+      <label class="f"><span>Ruolo</span>
+        <input id="s-ruolo7" type="text" placeholder="Portiere" autocomplete="off"></label>
+      <label class="file"><input id="s-foto7" type="file" accept="image/*,.gif">
+        <span id="s-foto7-l">Scegli la foto</span></label>
+    </div>
+    <div id="g-blocco8" class="nascosto">
+      <div class="sez">Giocatore 8</div>
+      <label class="f"><span>Nome</span>
+        <input id="s-nome8" type="text" placeholder="G. Rossi" autocomplete="off"></label>
+      <label class="f"><span>Ruolo</span>
+        <input id="s-ruolo8" type="text" placeholder="Portiere" autocomplete="off"></label>
+      <label class="file"><input id="s-foto8" type="file" accept="image/*,.gif">
+        <span id="s-foto8-l">Scegli la foto</span></label>
+    </div>
+
+    <div class="sez">Riquadro in basso</div>
+    <label class="f"><span>Prima riga</span>
+      <input id="s-riga1" type="text" placeholder="(predefinita in base al tipo)" autocomplete="off"></label>
+    <label class="f"><span>Seconda riga</span>
+      <input id="s-riga2" type="text" placeholder="Società e dirigenza" autocomplete="off"></label>
+  </div>
+
   <label class="check nascosto" id="postbox">
     <input type="checkbox" id="c-post">
     <span>Genera anche il formato post (1080×1350)</span>
@@ -266,6 +372,9 @@ const FORMATI = {
             fasciaY:790, fasciaH:360, cy:970, rC:138, rCentro:178,
             nomi:1292, nomiS:50, nomiW:400,
             box:1400, boxH:240, infoS:40, labS:22, marcS:38, punt:118,
+            rosaLogo:178, rosaLogoR:76, rosaTipo:320, rosaT1:470, rosaT1S:150,
+            rosaT2:592, rosaT2S:120, rosaFotoR:250, rosaNomeS:74,
+            rosaGridY:650, rosaGridH:720,
             convLogo:252, convLogoR:108, convTipo:430,
             convT:590, convTS:120, listaY:720, listaH:900,
             piede:1756, piedeS:27 },
@@ -275,6 +384,9 @@ const FORMATI = {
             fasciaY:560, fasciaH:290, cy:705, rC:110, rCentro:142,
             nomi:948, nomiS:44, nomiW:380,
             box:1020, boxH:200, infoS:34, labS:20, marcS:32, punt:96,
+            rosaLogo:132, rosaLogoR:55, rosaTipo:232, rosaT1:344, rosaT1S:108,
+            rosaT2:428, rosaT2S:86, rosaFotoR:170, rosaNomeS:58,
+            rosaGridY:490, rosaGridH:500,
             convLogo:196, convLogoR:88, convTipo:330,
             convT:450, convTS:94, listaY:545, listaH:620,
             piede:1268, piedeS:23 }
@@ -329,6 +441,16 @@ function larghezzaTesto(t, size, famiglia, ls){
   const w = ctx.measureText(t).width;
   if("letterSpacing" in ctx) ctx.letterSpacing = "0px";
   return w;
+}
+
+function adattaConFont(t, size, maxW, fontDi){
+  let s = size;
+  while(s > 10){
+    ctx.font = fontDi(s);
+    if(ctx.measureText(t).width <= maxW) break;
+    s -= 1;
+  }
+  return s;
 }
 
 function adattaTesto(t, size, maxW, famiglia, ls){
@@ -588,7 +710,7 @@ function fascia(y, h){
 }
 
 /* Testo in oro metallico con contorno e ombra. */
-function testoOro(t, x, y, size, ls){
+function testoOro(t, x, y, size, ls, famiglia){
   if(!t) return;
   const g = ctx.createLinearGradient(0, y - size * 0.78, 0, y + size * 0.10);
   g.addColorStop(0, ORO_CHIARO); g.addColorStop(0.45, ORO);
@@ -596,7 +718,8 @@ function testoOro(t, x, y, size, ls){
   ctx.save();
   ctx.shadowColor = "rgba(0,0,0,0.45)";
   ctx.shadowBlur = size * 0.10; ctx.shadowOffsetY = size * 0.05;
-  ctx.font = size + "px Anton"; ctx.textAlign = "center";
+  ctx.font = (famiglia ? famiglia.replace("SIZE", size) : size + "px Anton");
+  ctx.textAlign = "center";
   if("letterSpacing" in ctx) ctx.letterSpacing = (ls || 0) + "px";
   ctx.fillStyle = g; ctx.fillText(t, x, y);
   ctx.shadowColor = "transparent";
@@ -876,11 +999,110 @@ function disegnaConv(){
   piede();
 }
 
+
+/* Cornice circolare a fasce concentriche, oro e nero, con la foto al centro. */
+function corniceFoto(cx, cy, rEst, media){
+  const g = ctx.createLinearGradient(cx - rEst, cy - rEst, cx + rEst, cy + rEst);
+  g.addColorStop(0, ORO_CHIARO); g.addColorStop(0.34, ORO);
+  g.addColorStop(0.62, ORO_CHIARO); g.addColorStop(1, ORO_SCURO);
+  const disco = function(r, col){
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fillStyle = col; ctx.fill();
+  };
+  ctx.save();
+  ctx.shadowColor = "rgba(0,0,0,0.45)";
+  ctx.shadowBlur = rEst * 0.10; ctx.shadowOffsetY = rEst * 0.04;
+  disco(rEst, g);
+  ctx.restore();
+  if(rEst >= 130){
+    disco(rEst * 0.955, NERO); disco(rEst * 0.905, g);
+    disco(rEst * 0.850, NERO); disco(rEst * 0.805, g);
+    disco(rEst * 0.760, NERO);
+  } else {                                  // poche fasce: restano leggibili
+    disco(rEst * 0.93, NERO); disco(rEst * 0.87, g); disco(rEst * 0.80, NERO);
+  }
+  const rF = rEst * 0.735;
+  if(media) cerchioImmagine(media, cx, cy, rF);
+  else scriviCentratoV("FOTO", cx, cy, Math.round(rEst * 0.115),
+                       "rgba(250,215,102,0.55)", ARIAL, 4);
+  ctx.beginPath(); ctx.arc(cx, cy, rF, 0, Math.PI * 2);
+  ctx.strokeStyle = ORO_SCURO; ctx.lineWidth = 3; ctx.stroke();
+}
+
+const fotoRosa = [];
+
+function quantiRosa(){
+  return Math.max(1, Math.min(8, parseInt($("s-quanti").value, 10) || 1));
+}
+
+function disegnaRosa(){
+  T = TEMI.giallo;
+  mutoAtt = T.muto;
+  sfondo();
+
+  const nuovoAcq = $("s-tipo").value === "new";
+  const n = quantiRosa();
+  if(logoCasa) logoSopraCerchio(logoCasa, 540, L.rosaLogo, L.rosaLogoR);
+  else {
+    ctx.strokeStyle = "rgba(200,155,60,0.45)"; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(540, L.rosaLogo, L.rosaLogoR, 0, Math.PI * 2); ctx.stroke();
+  }
+  scriviLimitato(val("s-stagione").toUpperCase(), 540, L.rosaTipo, L.tipoS, 16, 820,
+                 T.inch, SERIF, L.tipoLS);
+
+  const t1 = nuovoAcq ? (n > 1 ? "NUOVI" : "NUOVO") : "RICONFERMA";
+  const t2 = nuovoAcq ? (n > 1 ? "acquisti" : "acquisto") : "dei giocatori";
+  scrivi(t1, 540, L.rosaT1, adattaTesto(t1, L.rosaT1S, 880, "Anton", 3), T.inch, "Anton", 3);
+  const fontCorsivo = function(v){ return "italic bold " + v + "px " + SERIF; };
+  testoOro(t2, 540, L.rosaT2, adattaConFont(t2, L.rosaT2S, 800, fontCorsivo), 1,
+           "italic bold SIZEpx " + SERIF);
+
+  // griglia: una riga fino a 3 giocatori, due righe da 4 in su
+  const righe = n <= 3 ? 1 : 2;
+  const colonne = Math.ceil(n / righe);
+  const marg = 54;
+  const cellW = (L.W - 2 * marg) / colonne;
+  const cellH = L.rosaGridH / righe;
+  const nomeS = Math.min(L.rosaNomeS, Math.round(cellW * 0.16));
+  const ruoloS = Math.max(15, Math.round(nomeS * 0.62));
+  const r = Math.min(cellW * 0.42, (cellH - nomeS - ruoloS - 46) / 2, L.rosaFotoR);
+  const contenuto = 2 * r + 18 + nomeS * 0.73 + ruoloS * 1.35;
+
+  for(let i = 0; i < n; i++){
+    const f = Math.floor(i / colonne), c = i % colonne;
+    const inRiga = Math.min(colonne, n - f * colonne);
+    const scarto = (colonne - inRiga) * cellW / 2;      // ultima riga centrata
+    const cx = marg + scarto + cellW * (c + 0.5);
+    const cyTop = L.rosaGridY + cellH * f + (cellH - contenuto) / 2;
+    corniceFoto(cx, cyTop + r, r, fotoRosa[i]);
+    const yn = cyTop + 2 * r + 18 + nomeS * 0.73;
+    scriviLimitato(val("s-nome" + (i + 1)).toUpperCase(), cx, yn, nomeS, 18,
+                   cellW * 0.92, T.inch, "Anton", 1);
+    scriviLimitato(val("s-ruolo" + (i + 1)).toUpperCase(), cx, yn + ruoloS * 1.35, ruoloS, 13,
+                   cellW * 0.9, mutoAtt, "Anton", 3);
+  }
+
+  const by = L.box, bh = L.boxH;
+  pannello(140, by, 800, bh);
+  const r1 = val("s-riga1") || (nuovoAcq
+    ? (n > 1 ? "Nuovi tesseramenti ufficiali" : "Nuovo tesseramento ufficiale")
+    : (n > 1 ? "Lista ufficiale giocatori confermati" : "Lista ufficiale giocatore confermato"));
+  const r2 = val("s-riga2") || "Società e dirigenza";
+  scriviLimitato(r1.toUpperCase(), 540, by + bh * 0.35, Math.round(L.infoS * 0.92), 20, 700,
+                 ORO_CHIARO, "Anton", 0);
+  ctx.beginPath();
+  ctx.moveTo(440, by + bh * 0.50); ctx.lineTo(640, by + bh * 0.50);
+  ctx.strokeStyle = "rgba(200,155,60,0.7)"; ctx.lineWidth = 2; ctx.stroke();
+  scriviLimitato(r2.toUpperCase(), 540, by + bh * 0.74, Math.round(L.infoS * 0.80), 18, 700,
+                 ORO, "Anton", 0);
+  piede();
+}
+
 function disegna(){
   if(scheda === "gol") disegnaGol();
   else if(scheda === "md") disegnaMd();
   else if(scheda === "ris") disegnaRis();
-  else disegnaConv();
+  else if(scheda === "conv") disegnaConv();
+  else disegnaRosa();
 }
 
 /* ---------- interazione ---------- */
@@ -890,19 +1112,23 @@ function apri(nome){
   $("t-md").classList.toggle("on", nome === "md");
   $("t-ris").classList.toggle("on", nome === "ris");
   $("t-conv").classList.toggle("on", nome === "conv");
+  $("t-rosa").classList.toggle("on", nome === "rosa");
   $("p-gol").classList.toggle("nascosto", nome !== "gol");
   $("p-md").classList.toggle("nascosto", nome !== "md");
   $("p-ris").classList.toggle("nascosto", nome !== "ris");
   $("p-conv").classList.toggle("nascosto", nome !== "conv");
+  $("p-rosa").classList.toggle("nascosto", nome !== "rosa");
   $("genvid").classList.toggle("nascosto", nome !== "gol");
   $("codecbox").classList.toggle("nascosto", nome !== "gol");
   $("postbox").classList.toggle("nascosto", nome === "gol");
   disegna();
 }
 $("t-gol").onclick = () => apri("gol");
-$("t-md").onclick  = () => apri("md");
+$("t-md").onclick  = () => aggiornaCampiRosa();
+apri("md");
 $("t-ris").onclick = () => apri("ris");
 $("t-conv").onclick = () => apri("conv");
+$("t-rosa").onclick = () => apri("rosa");
 
 document.querySelectorAll("input[type=text]").forEach(function(i){ i.oninput = disegna; });
 
@@ -1165,6 +1391,18 @@ function collegaFile(idInput, idEtichetta, testo, assegna){
 collegaFile("g-foto",  "g-foto-l",  "Foto o clip",    i => foto = i);
 collegaFile("m-lcasa", "m-lcasa-l", "Stemma di casa", i => logoCasa = i);
 collegaFile("m-losp",  "m-losp-l",  "Stemma ospite",  i => logoOsp = i);
+for(let k = 1; k <= 8; k++){
+  (function(i){
+    collegaFile("s-foto" + i, "s-foto" + i + "-l", "Foto giocatore " + i,
+                function(m){ fotoRosa[i - 1] = m; });
+  })(k);
+}
+
+function aggiornaCampiRosa(){
+  const n = quantiRosa();
+  for(let k = 1; k <= 8; k++) $("g-blocco" + k).classList.toggle("nascosto", k > n);
+}
+$("s-quanti").onchange = function(){ aggiornaCampiRosa(); disegna(); };
 
 /* ---------- animazione GOOOOL ---------- */
 const CICLO = 2400, DURATA = 7200;          // millisecondi
@@ -1360,7 +1598,9 @@ function rendiFormato(nome){
 
 $("gen").onclick = function(){
   const base = scheda === "gol" ? "gol" : (scheda === "md" ? "match-day"
-               : (scheda === "ris" ? "risultato" : "convocati"));
+               : (scheda === "ris" ? "risultato"
+               : (scheda === "conv" ? "convocati"
+               : ($("s-tipo").value === "new" ? "nuovo-acquisto" : "riconferma"))));
   const doppio = scheda !== "gol" && $("c-post").checked;
   const uscite = [];
   try {
@@ -1397,11 +1637,13 @@ function mostraDiagnostica(){
 $("codec").onchange = mostraDiagnostica;
 $("r-momento").onchange = disegna;
 $("m-invert").onchange = disegna;
+$("s-tipo").onchange = disegna;
 $("c-lista").oninput = disegna;
 
 $("c-handle").value = CFG.handle;
 $("c-tag").value = CFG.hashtag;
 mostraDiagnostica();
+aggiornaCampiRosa();
 apri("md");
 
 if(document.fonts && document.fonts.load){
