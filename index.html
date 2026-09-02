@@ -116,7 +116,7 @@
         <input id="g-num" type="text" inputmode="numeric" placeholder="10" maxlength="2"></label>
     </div>
     <label class="file"><input id="g-foto" type="file"
-        accept="image/*,video/*,image/gif,video/quicktime,video/mp4,.gif,.mov,.mp4,.m4v,.hevc">
+        accept="image/*,video/*">
       <span id="g-foto-l">Scegli la foto o la clip dell'esultanza</span></label>
 
     <div class="sez">Punteggio</div>
@@ -1751,6 +1751,16 @@ function riproduciGif(fotogrammi){
   return vista;
 }
 
+/* Il tipo MIME non basta: da iPhone un .MOV arriva spesso senza tipo. */
+function tipoFile(f){
+  const n = (f.name || "").toLowerCase();
+  if(f.type === "image/gif" || /\.gif$/.test(n)) return "gif";
+  if(f.type.indexOf("video") === 0 ||
+     /\.(mov|qt|mp4|m4v|hevc|webm|mkv|avi|3gp|3g2)$/.test(n)) return "video";
+  if(f.type.indexOf("image") === 0) return "immagine";
+  return "sconosciuto";
+}
+
 function caricaGif(file, ok, ko){
   const fr = new FileReader();
   fr.onload = function(){
@@ -1772,6 +1782,7 @@ function caricaVideo(file, ok, ko){
     v.style.cssText = "position:absolute;width:1px;height:1px;opacity:0;pointer-events:none";
     document.body.appendChild(v);      // iOS decodifica solo i video presenti nel DOM
     v.onloadeddata = function(){
+      if(!v.videoWidth || !v.videoHeight){ v.onerror(); return; }
       const p = v.play();
       if(p && p.catch) p.catch(function(){});
       ok(v);
@@ -1782,7 +1793,13 @@ function caricaVideo(file, ok, ko){
     };
     v.src = src;
   }
+  const LIMITE = 40 * 1024 * 1024;
   function ripiego(){
+    if(!giaRipiegato && file.size > LIMITE){
+      ko("clip da " + Math.round(file.size / 1048576) + " MB: troppo pesante da convertire. " +
+         "Accorciala o esportala a risoluzione più bassa.");
+      return;
+    }
     if(giaRipiegato){
       ko("questo browser non decodifica la clip. Se viene da iPhone è in HEVC/H.265: " +
          "aprila in Safari, oppure imposta Fotocamera › Formati › Massima compatibilità " +
@@ -1817,10 +1834,13 @@ function collegaFile(idInput, idEtichetta, testo, assegna){
       else mostraDiagnostica();
     };
     const fallito = function(msg){ errore(testo + ": " + msg); };
-    const gif = f.type === "image/gif" || /\.gif$/i.test(f.name || "");
-    if(gif)                              caricaGif(f, fatto, fallito);
-    else if(f.type.indexOf("video") === 0) caricaVideo(f, fatto, fallito);
-    else                                 caricaImmagine(f, fatto, fallito);
+    const tipo = tipoFile(f);
+    if(tipo === "gif")        caricaGif(f, fatto, fallito);
+    else if(tipo === "video") caricaVideo(f, fatto, fallito);
+    else caricaImmagine(f, fatto, function(msg){
+      // tipo sconosciuto: prima di arrendersi si prova come video
+      caricaVideo(f, fatto, function(){ fallito(msg); });
+    });
   };
 }
 collegaFile("g-foto",  "g-foto-l",  "Foto o clip",    i => foto = i);
