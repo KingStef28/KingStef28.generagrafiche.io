@@ -30,9 +30,9 @@
 
   .top{position:sticky;top:0;z-index:10;background:var(--nero);
     padding:14px 0 10px;border-bottom:1px solid var(--bordo)}
-  .tabs{display:flex;gap:5px;margin-bottom:12px}
-  .tab{flex:1 1 0;min-width:0;padding:13px 2px;border:1px solid var(--bordo);background:#111;
-    color:var(--muto);border-radius:10px;font:600 clamp(8px,2.6vw,12px)/1 inherit;
+  .tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+  .tab{flex:1 1 30%;min-width:0;padding:13px 2px;border:1px solid var(--bordo);background:#111;
+    color:var(--muto);border-radius:10px;font:600 clamp(10px,3.1vw,13px)/1 inherit;
     letter-spacing:.01em;text-transform:uppercase;white-space:nowrap;cursor:pointer}
   .check{display:flex;align-items:center;gap:11px;margin:4px 0 14px;padding:13px 12px;
     background:var(--pannello);border:1px solid var(--bordo);border-radius:9px;cursor:pointer}
@@ -101,6 +101,7 @@
       <button class="tab" id="t-gol" type="button">Gol</button>
       <button class="tab" id="t-ris" type="button">Risultato</button>
       <button class="tab" id="t-rosa" type="button">Rosa</button>
+      <button class="tab" id="t-cal" type="button">Calendario</button>
     </div>
     <div class="stage"><canvas id="cv" width="1080" height="1920"></canvas></div>
   </div>
@@ -316,6 +317,21 @@
       <input id="s-riga2" type="text" placeholder="Società e dirigenza" autocomplete="off"></label>
   </div>
 
+  <!-- ---------- CALENDARIO ---------- -->
+  <div id="p-cal" class="nascosto">
+    <div class="sez">Intestazione</div>
+    <label class="f"><span>Riga in alto</span>
+      <input id="cal-top" type="text" placeholder="Stagione 2025/26" autocomplete="off"></label>
+    <label class="f"><span>Titolo</span>
+      <input id="cal-titolo" type="text" placeholder="Calendario" autocomplete="off"></label>
+    <label class="f"><span>Quante partite</span>
+      <select id="cal-quante"></select></label>
+    <p class="nota">Casa e trasferta si scelgono partita per partita: in casa compare una
+      casetta, in trasferta un aeroplano. Lo stemma in cima è quello della scheda Match day.</p>
+    <div class="sez">Partite</div>
+    <div id="cal-righe"></div>
+  </div>
+
   <label class="check nascosto" id="postbox">
     <input type="checkbox" id="c-post">
     <span>Genera anche il formato post (1080×1350)</span>
@@ -375,6 +391,7 @@ const FORMATI = {
             rosaLogo:178, rosaLogoR:76, rosaTipo:320, rosaT1:470, rosaT1S:150,
             rosaT2:592, rosaT2S:120, rosaFotoR:250, rosaNomeS:74,
             rosaGridY:650, rosaGridH:720,
+            calY:660, calH:960,
             convLogo:252, convLogoR:108, convTipo:430,
             convT:590, convTS:120, listaY:720, listaH:900,
             piede:1756, piedeS:27 },
@@ -387,6 +404,7 @@ const FORMATI = {
             rosaLogo:132, rosaLogoR:55, rosaTipo:232, rosaT1:344, rosaT1S:108,
             rosaT2:428, rosaT2S:86, rosaFotoR:170, rosaNomeS:58,
             rosaGridY:490, rosaGridH:500,
+            calY:500, calH:610,
             convLogo:196, convLogoR:88, convTipo:330,
             convT:450, convTS:94, listaY:545, listaH:620,
             piede:1268, piedeS:23 }
@@ -753,7 +771,7 @@ function disegnaGol(){
   sfondo();
   testoOro("GOL!", 540, 520, 212, 4);
 
-  const cx = 540, cy = 915, r = 205;
+  const cx = 540, cy = 915, r = 220;
   ctx.fillStyle = "rgba(250,215,102,0.07)";
   ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
   if(foto) cerchioImmagine(foto, cx, cy, r);
@@ -762,9 +780,9 @@ function disegnaGol(){
   ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
 
   ctx.fillStyle = ORO_CHIARO;
-  ctx.beginPath(); ctx.arc(685, 770, 60, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(695, 760, 60, 0, Math.PI * 2); ctx.fill();
   ctx.strokeStyle = NERO; ctx.lineWidth = 3; ctx.stroke();
-  scriviCentratoV(val("g-num"), 685, 770, 60, NERO);
+  scriviCentratoV(val("g-num"), 695, 760, 60, NERO);
 
   scriviLimitato(val("g-nome").toUpperCase(), 540, 1300, 104, 60, 880, T.inch, "Anton", 1);
 
@@ -1097,12 +1115,155 @@ function disegnaRosa(){
   piede();
 }
 
+
+/* ---------- icone casa / trasferta ---------- */
+function tracciaSagoma(punti, cx, cy, s, specchia){
+  ctx.beginPath();
+  punti.forEach(function(q, i){
+    const x = cx + q[0] * s, y = cy + q[1] * s;
+    i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+  });
+  if(specchia){
+    for(let i = punti.length - 2; i >= 0; i--)
+      ctx.lineTo(cx + punti[i][0] * s, cy - punti[i][1] * s);
+  }
+  ctx.closePath();
+}
+
+function iconaCasa(cx, cy, s, col){
+  const sagoma = [[-0.50,0.08],[0,-0.44],[0.50,0.08],[0.34,0.08],[0.34,0.44],
+                  [-0.34,0.44],[-0.34,0.08]];
+  ctx.save();
+  ctx.translate(cx, cy);
+
+  if(s >= 26){
+    ctx.save();
+    ctx.shadowColor = "rgba(0,0,0,0.55)";
+    ctx.shadowBlur = s * 0.16;
+    ctx.shadowOffsetX = s * 0.05; ctx.shadowOffsetY = s * 0.10;
+    tracciaSagoma(sagoma, 0, 0, s, false);
+    ctx.fillStyle = ORO_SCURO; ctx.fill();
+    ctx.restore();
+  }
+
+  // tetto chiaro e muro più in ombra: lo stacco dà volume
+  const g = ctx.createLinearGradient(0, -0.44 * s, 0, 0.44 * s);
+  g.addColorStop(0.00, ORO_CHIARO);
+  g.addColorStop(0.55, ORO_CHIARO);
+  g.addColorStop(0.60, ORO);
+  g.addColorStop(1.00, ORO_SCURO);
+  tracciaSagoma(sagoma, 0, 0, s, false);
+  ctx.fillStyle = s >= 22 ? g : col; ctx.fill();
+
+  if(s >= 26){
+    ctx.lineWidth = Math.max(1, s * 0.028);
+    ctx.strokeStyle = "rgba(13,13,13,0.5)";
+    ctx.stroke();
+  }
+  ctx.fillStyle = T.fondo;                       // la porta, per definire la sagoma
+  ctx.fillRect(-0.11 * s, 0.14 * s, 0.22 * s, 0.30 * s);
+  ctx.restore();
+}
+
+function iconaAereo(cx, cy, s, col){
+  const sagoma = [[0.50,0.00],[0.33,0.065],[0.14,0.09],[0.06,0.095],
+                  [-0.08,0.46],[-0.24,0.46],[-0.22,0.10],[-0.34,0.08],
+                  [-0.37,0.30],[-0.47,0.30],[-0.48,0.06],[-0.50,0.00]];
+  const ang = -40 * Math.PI / 180;
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(ang);                                   // in diagonale, muso in alto a destra
+
+  if(s >= 26){
+    // ombra portata: l'offset è calcolato per cadere in basso a destra sullo schermo
+    ctx.save();
+    ctx.shadowColor = "rgba(0,0,0,0.55)";
+    ctx.shadowBlur = s * 0.16;
+    ctx.shadowOffsetX = -0.02 * s; ctx.shadowOffsetY = 0.10 * s;
+    tracciaSagoma(sagoma, 0, 0, s, true);
+    ctx.fillStyle = ORO_SCURO; ctx.fill();
+    ctx.restore();
+  }
+
+  // sfumatura metallica trasversale: dà volume alla fusoliera
+  const g = ctx.createLinearGradient(0, -0.46 * s, 0, 0.46 * s);
+  g.addColorStop(0.00, ORO);
+  g.addColorStop(0.30, ORO_CHIARO);
+  g.addColorStop(0.52, ORO_CHIARO);
+  g.addColorStop(0.74, ORO);
+  g.addColorStop(1.00, ORO_SCURO);
+  tracciaSagoma(sagoma, 0, 0, s, true);
+  ctx.fillStyle = s >= 22 ? g : col; ctx.fill();
+
+  if(s >= 26){
+    ctx.lineWidth = Math.max(1, s * 0.028);
+    ctx.strokeStyle = "rgba(13,13,13,0.5)";
+    ctx.stroke();
+    // riflesso sulla schiena della fusoliera
+    ctx.beginPath();
+    ctx.moveTo(0.42 * s, -0.012 * s);
+    ctx.lineTo(-0.30 * s, -0.030 * s);
+    ctx.lineTo(-0.30 * s, -0.055 * s);
+    ctx.lineTo(0.40 * s, -0.040 * s);
+    ctx.closePath();
+    ctx.fillStyle = "rgba(255,240,190,0.55)"; ctx.fill();
+  }
+  ctx.restore();
+}
+
+function quanteCal(){
+  return Math.max(1, Math.min(30, parseInt($("cal-quante").value, 10) || 1));
+}
+
+function disegnaCal(){
+  T = TEMI.scuro;
+  mutoAtt = T.muto;
+  sfondo();
+
+  // il campo resta in vista: aggiungiamo metà campo e cerchio
+  ctx.strokeStyle = T.righe; ctx.lineWidth = 3;
+  const my = L.H / 2;
+  ctx.beginPath(); ctx.moveTo(L.bordo, my); ctx.lineTo(L.W - L.bordo, my); ctx.stroke();
+  ctx.beginPath(); ctx.arc(540, my, L.W * 0.135, 0, Math.PI * 2); ctx.stroke();
+
+  if(logoCasa) logoSopraCerchio(logoCasa, 540, L.convLogo, L.convLogoR);
+  else {
+    ctx.strokeStyle = "rgba(200,155,60,0.45)"; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(540, L.convLogo, L.convLogoR, 0, Math.PI * 2); ctx.stroke();
+  }
+  scriviLimitato(val("cal-top").toUpperCase(), 540, L.convTipo, L.tipoS, 16, 820,
+                 T.inch, SERIF, L.tipoLS);
+  const tit = (val("cal-titolo") || "CALENDARIO").toUpperCase();
+  testoOro(tit, 540, L.convT, adattaTesto(tit, L.convTS, 860, "Anton", 2), 2);
+
+  const n = quanteCal();
+  const nRighe = Math.ceil(n / 2);
+  const lh = Math.min(L.calH * 0.080, (L.calH * 0.94) / nRighe);
+  const fs = Math.max(15, Math.round(lh * 0.58));
+  const y0 = L.calY + (L.calH - nRighe * lh) / 2 + lh * 0.5;
+  const cw = 450, colx = [315, 765];
+
+  for(let i = 0; i < n; i++){
+    const c = i < nRighe ? 0 : 1;
+    const y = y0 + (i < nRighe ? i : i - nRighe) * lh;
+    const casa = $("cal-dove" + (i + 1)).value === "c";
+    if(casa) iconaCasa(colx[c] - cw * 0.33, y, fs * 1.02, ORO_CHIARO);
+    else     iconaAereo(colx[c] - cw * 0.33, y, fs * 1.10, ORO);
+    const nome = val("cal-sq" + (i + 1)).toUpperCase();
+    const sn = adattaTesto(nome, fs, cw * 0.60, "Anton", 0);
+    scrivi(nome, colx[c] - cw * 0.24, y + centroInk(nome, sn, "Anton", 0),
+           sn, ORO_CHIARO, "Anton", 0, "left");
+  }
+  piede();
+}
+
 function disegna(){
   if(scheda === "gol") disegnaGol();
   else if(scheda === "md") disegnaMd();
   else if(scheda === "ris") disegnaRis();
   else if(scheda === "conv") disegnaConv();
-  else disegnaRosa();
+  else if(scheda === "rosa") disegnaRosa();
+  else disegnaCal();
 }
 
 /* ---------- interazione ---------- */
@@ -1113,22 +1274,24 @@ function apri(nome){
   $("t-ris").classList.toggle("on", nome === "ris");
   $("t-conv").classList.toggle("on", nome === "conv");
   $("t-rosa").classList.toggle("on", nome === "rosa");
+  $("t-cal").classList.toggle("on", nome === "cal");
   $("p-gol").classList.toggle("nascosto", nome !== "gol");
   $("p-md").classList.toggle("nascosto", nome !== "md");
   $("p-ris").classList.toggle("nascosto", nome !== "ris");
   $("p-conv").classList.toggle("nascosto", nome !== "conv");
   $("p-rosa").classList.toggle("nascosto", nome !== "rosa");
+  $("p-cal").classList.toggle("nascosto", nome !== "cal");
   $("genvid").classList.toggle("nascosto", nome !== "gol");
   $("codecbox").classList.toggle("nascosto", nome !== "gol");
   $("postbox").classList.toggle("nascosto", nome === "gol");
   disegna();
 }
 $("t-gol").onclick = () => apri("gol");
-$("t-md").onclick  = () => aggiornaCampiRosa();
-apri("md");
+$("t-md").onclick  = () => apri("md");
 $("t-ris").onclick = () => apri("ris");
 $("t-conv").onclick = () => apri("conv");
 $("t-rosa").onclick = () => apri("rosa");
+$("t-cal").onclick = () => apri("cal");
 
 document.querySelectorAll("input[type=text]").forEach(function(i){ i.oninput = disegna; });
 
@@ -1398,6 +1561,33 @@ for(let k = 1; k <= 8; k++){
   })(k);
 }
 
+(function costruisciCalendario(){
+  let opz = "";
+  for(let k = 1; k <= 30; k++) opz += '<option value="' + k + '">' + k + '</option>';
+  $("cal-quante").innerHTML = opz;
+  $("cal-quante").value = "10";
+  let righe = "";
+  for(let k = 1; k <= 30; k++){
+    righe += '<div class="row" id="cal-r' + k + '">' +
+      '<label class="f mini"><span>' + k + '</span>' +
+      '<select id="cal-dove' + k + '"><option value="c">Casa</option>' +
+      '<option value="t">Trasferta</option></select></label>' +
+      '<label class="f"><span>Avversario</span>' +
+      '<input id="cal-sq' + k + '" type="text" autocomplete="off"></label></div>';
+  }
+  $("cal-righe").innerHTML = righe;
+  for(let k = 1; k <= 30; k++){
+    $("cal-dove" + k).onchange = disegna;
+    $("cal-sq" + k).oninput = disegna;
+  }
+})();
+
+function aggiornaCampiCal(){
+  const n = quanteCal();
+  for(let k = 1; k <= 30; k++) $("cal-r" + k).classList.toggle("nascosto", k > n);
+}
+$("cal-quante").onchange = function(){ aggiornaCampiCal(); disegna(); };
+
 function aggiornaCampiRosa(){
   const n = quantiRosa();
   for(let k = 1; k <= 8; k++) $("g-blocco" + k).classList.toggle("nascosto", k > n);
@@ -1423,7 +1613,7 @@ function disegnaGolAnimato(tt){              // tt va da 0 a 1 dentro il ciclo
   testoOro("GOOOOL!", 0, 0, 200 * 880 / largh, 4);
   ctx.restore();
 
-  const cx = 540, cy = 915, r = 205;
+  const cx = 540, cy = 915, r = 220;
   ctx.fillStyle = "rgba(250,215,102,0.07)";
   ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
   if(foto) cerchioImmagine(foto, cx, cy, r);
@@ -1435,9 +1625,9 @@ function disegnaGolAnimato(tt){              // tt va da 0 a 1 dentro il ciclo
   ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
 
   ctx.fillStyle = ORO_CHIARO;
-  ctx.beginPath(); ctx.arc(685, 770, 60, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(695, 760, 60, 0, Math.PI * 2); ctx.fill();
   ctx.strokeStyle = NERO; ctx.lineWidth = 3; ctx.stroke();
-  scriviCentratoV(val("g-num"), 685, 770, 60, NERO);
+  scriviCentratoV(val("g-num"), 695, 760, 60, NERO);
 
   scriviLimitato(val("g-nome").toUpperCase(), 540, 1300, 104, 60, 880, T.inch, "Anton", 1);
 
@@ -1600,7 +1790,8 @@ $("gen").onclick = function(){
   const base = scheda === "gol" ? "gol" : (scheda === "md" ? "match-day"
                : (scheda === "ris" ? "risultato"
                : (scheda === "conv" ? "convocati"
-               : ($("s-tipo").value === "new" ? "nuovo-acquisto" : "riconferma"))));
+               : (scheda === "cal" ? "calendario"
+               : ($("s-tipo").value === "new" ? "nuovo-acquisto" : "riconferma")))));
   const doppio = scheda !== "gol" && $("c-post").checked;
   const uscite = [];
   try {
@@ -1644,6 +1835,7 @@ $("c-handle").value = CFG.handle;
 $("c-tag").value = CFG.hashtag;
 mostraDiagnostica();
 aggiornaCampiRosa();
+aggiornaCampiCal();
 apri("md");
 
 if(document.fonts && document.fonts.load){
