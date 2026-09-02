@@ -786,6 +786,29 @@ function trovaVolto(media){
 function misura(m){
   return [m.videoWidth || m.naturalWidth || m.width, m.videoHeight || m.naturalHeight || m.height];
 }
+/* Come cerchioImmagine ma su un rettangolo ad angoli arrotondati:
+   la forma verticale segue la figura del giocatore. */
+function rettImmagine(img, X, Y, W, H, R, reg){
+  const d = misura(img);
+  if(!d[0] || !d[1]) return;
+  const coprire = Math.max(W / d[0], H / d[1]);
+  const v = ($("c-volto") && $("c-volto").checked) ? trovaVolto(img) : null;
+  let s = coprire, fx = d[0] / 2, fy = d[1] / 2, alt = 0;
+  if(v && v.d > 0){
+    s = Math.max(coprire, Math.min(coprire * 3, 0.34 * W / v.d));
+    fx = v.x; fy = v.y; alt = -0.22 * H;
+  }
+  const zoom = reg && reg.zoom ? reg.zoom : 1;
+  s *= zoom;
+  let dx = (X + W / 2 + (reg ? reg.dx * W / 2 : 0)) - fx * s;
+  let dy = (Y + H / 2 + alt - (reg ? reg.dy * H / 2 : 0)) - fy * s;
+  dx = Math.min(X, Math.max(X + W - d[0] * s, dx));
+  dy = Math.min(Y, Math.max(Y + H - d[1] * s, dy));
+  ctx.save(); rett(X, Y, W, H, R); ctx.clip();
+  ctx.drawImage(img, dx, dy, d[0] * s, d[1] * s);
+  ctx.restore();
+}
+
 function cerchioImmagine(img, cx, cy, r, reg){
   const d = misura(img);
   if(!d[0] || !d[1]) return;
@@ -1060,20 +1083,18 @@ function disegnaGol(){
   sfondo();
   testoOro("GOL!", 540, 520, 212, 4);
 
-  const cx = 540, cy = 915, r = 220;
-  ctx.fillStyle = "rgba(250,215,102,0.07)";
-  ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
-  if(foto) cerchioImmagine(foto, cx, cy, r, regolazioneGol());
-  else scriviCentratoV("FOTO", cx, cy, 26, "rgba(250,215,102,0.55)", ARIAL, 4);
-  ctx.strokeStyle = ORO; ctx.lineWidth = 3;
-  ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+  const RX = 300, RY = 606, RW = 480, RH = 580, RR = 46;
+  rett(RX, RY, RW, RH, RR); ctx.fillStyle = "rgba(250,215,102,0.07)"; ctx.fill();
+  if(foto) rettImmagine(foto, RX, RY, RW, RH, RR, regolazioneGol());
+  else scriviCentratoV("FOTO", RX + RW / 2, RY + RH / 2, 26, "rgba(250,215,102,0.55)", ARIAL, 4);
+  rett(RX, RY, RW, RH, RR); ctx.strokeStyle = ORO; ctx.lineWidth = 3; ctx.stroke();
 
   ctx.fillStyle = ORO_CHIARO;
-  ctx.beginPath(); ctx.arc(695, 760, 60, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(RX + RW - 12, RY + 18, 58, 0, Math.PI * 2); ctx.fill();
   ctx.strokeStyle = NERO; ctx.lineWidth = 3; ctx.stroke();
-  scriviCentratoV(val("g-num"), 695, 760, 60, NERO);
+  scriviCentratoV(val("g-num"), RX + RW - 12, RY + 18, 58, NERO);
 
-  scriviLimitato(val("g-nome").toUpperCase(), 540, 1300, 104, 60, 880, T.inch, "Anton", 1);
+  scriviLimitato(val("g-nome").toUpperCase(), 540, 1318, 104, 60, 880, T.inch, "Anton", 1);
 
   const by = 1400, bh = 240;
   pannello(140, by, 800, bh);
@@ -1925,23 +1946,23 @@ function disegnaGolAnimato(tt){              // tt va da 0 a 1 dentro il ciclo
   testoOro("GOOOOL!", 0, 0, 200 * 880 / largh, 4);
   ctx.restore();
 
-  const cx = 540, cy = 915, r = 220;
-  ctx.fillStyle = "rgba(250,215,102,0.07)";
-  ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
-  if(foto) cerchioImmagine(foto, cx, cy, r, regolazioneGol());
-  else scriviCentratoV("CLIP", cx, cy, 26, "rgba(250,215,102,0.55)", ARIAL, 4);
+  const RX = 300, RY = 606, RW = 480, RH = 580, RR = 46;
+  rett(RX, RY, RW, RH, RR); ctx.fillStyle = "rgba(250,215,102,0.07)"; ctx.fill();
+  if(foto) rettImmagine(foto, RX, RY, RW, RH, RR, regolazioneGol());
+  else scriviCentratoV("CLIP", RX + RW / 2, RY + RH / 2, 26, "rgba(250,215,102,0.55)", ARIAL, 4);
+  // onda d'urto: ora segue la stessa forma del riquadro
+  const e = 150 * tt;
   ctx.strokeStyle = "rgba(250,215,102," + (0.85 * (1 - tt) + 0.15).toFixed(3) + ")";
   ctx.lineWidth = 4;
-  ctx.beginPath(); ctx.arc(cx, cy, r + 150 * tt, 0, Math.PI * 2); ctx.stroke();
-  ctx.strokeStyle = ORO; ctx.lineWidth = 3;
-  ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+  rett(RX - e, RY - e, RW + 2 * e, RH + 2 * e, RR + e * 0.6); ctx.stroke();
+  rett(RX, RY, RW, RH, RR); ctx.strokeStyle = ORO; ctx.lineWidth = 3; ctx.stroke();
 
   ctx.fillStyle = ORO_CHIARO;
-  ctx.beginPath(); ctx.arc(695, 760, 60, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(RX + RW - 12, RY + 18, 58, 0, Math.PI * 2); ctx.fill();
   ctx.strokeStyle = NERO; ctx.lineWidth = 3; ctx.stroke();
-  scriviCentratoV(val("g-num"), 695, 760, 60, NERO);
+  scriviCentratoV(val("g-num"), RX + RW - 12, RY + 18, 58, NERO);
 
-  scriviLimitato(val("g-nome").toUpperCase(), 540, 1300, 104, 60, 880, T.inch, "Anton", 1);
+  scriviLimitato(val("g-nome").toUpperCase(), 540, 1318, 104, 60, 880, T.inch, "Anton", 1);
 
   const by = 1400, bh = 240;
   pannello(140, by, 800, bh);
