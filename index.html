@@ -52,6 +52,9 @@
   .f span{display:block;margin-bottom:6px;font-size:12px;letter-spacing:.1em;
     text-transform:uppercase;color:var(--muto)}
   .f textarea{min-height:190px;resize:vertical;line-height:1.55}
+  .f input[type=range]{width:100%;padding:0;height:34px;background:transparent;border:0;
+    accent-color:var(--giallo)}
+  .f span b{float:right;font-weight:700;color:var(--giallo);letter-spacing:0}
   .f input, .f select, .f textarea{width:100%;padding:13px 12px;background:var(--pannello);
     border:1px solid var(--bordo);border-radius:9px;color:var(--inch);
     font:400 16px/1.2 inherit;-webkit-appearance:none;appearance:none}
@@ -118,6 +121,14 @@
     <label class="file"><input id="g-foto" type="file"
         accept="image/*,video/*">
       <span id="g-foto-l">Scegli la foto o la clip dell'esultanza</span></label>
+    <label class="f"><span>Zoom <b id="g-zoom-v">100%</b></span>
+      <input id="g-zoom" type="range" min="100" max="300" value="100"></label>
+    <label class="f"><span>Alza o abbassa l'inquadratura</span>
+      <input id="g-oy" type="range" min="-100" max="100" value="0"></label>
+    <label class="f"><span>Sposta a destra o sinistra</span>
+      <input id="g-ox" type="range" min="-100" max="100" value="0"></label>
+    <p class="nota">Il volto viene cercato da solo, ma nelle esultanze spesso non è
+      riconoscibile: con questi cursori sistemi l'inquadratura a mano guardando l'anteprima.</p>
 
     <div class="sez">Punteggio</div>
     <div class="row">
@@ -775,27 +786,36 @@ function trovaVolto(media){
 function misura(m){
   return [m.videoWidth || m.naturalWidth || m.width, m.videoHeight || m.naturalHeight || m.height];
 }
-function cerchioImmagine(img, cx, cy, r){
+function cerchioImmagine(img, cx, cy, r, reg){
   const d = misura(img);
   if(!d[0] || !d[1]) return;
   const coprire = Math.max(2 * r / d[0], 2 * r / d[1]);
   const v = ($("c-volto") && $("c-volto").checked) ? trovaVolto(img) : null;
-  let s = coprire, dx, dy;
+  let s = coprire, fx = d[0] / 2, fy = d[1] / 2, altezza = 0;
   if(v && v.d > 0){
-    // il volto occupa poco più di metà del cerchio e sta un filo sopra al centro
-    s = Math.max(coprire, Math.min(coprire * 3, 1.04 * r / v.d));
-    dx = cx - v.x * s;
-    dy = (cy - 0.10 * r) - v.y * s;
-    dx = Math.min(cx - r, Math.max(cx + r - d[0] * s, dx));   // niente bordi dentro al cerchio
-    dy = Math.min(cy - r, Math.max(cy + r - d[1] * s, dy));
-  } else {
-    dx = cx - d[0] * s / 2;
-    dy = cy - d[1] * s / 2;
+    // inquadratura a mezzo busto: il volto sta in alto e sotto resta spazio per il torso
+    s = Math.max(coprire, Math.min(coprire * 3, 0.60 * r / v.d));
+    fx = v.x; fy = v.y; altezza = -0.32 * r;
   }
+  const zoom = reg && reg.zoom ? reg.zoom : 1;
+  s *= zoom;
+  let dx = (cx + (reg ? reg.dx * r : 0)) - fx * s;
+  let dy = (cy + altezza - (reg ? reg.dy * r : 0)) - fy * s;
+  dx = Math.min(cx - r, Math.max(cx + r - d[0] * s, dx));   // niente bordi dentro al cerchio
+  dy = Math.min(cy - r, Math.max(cy + r - d[1] * s, dy));
   ctx.save();
   ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.clip();
   ctx.drawImage(img, dx, dy, d[0] * s, d[1] * s);
   ctx.restore();
+}
+
+/* Valori dei cursori della scheda Gol. */
+function regolazioneGol(){
+  const z = $("g-zoom"), x = $("g-ox"), y = $("g-oy");
+  if(!z) return null;
+  return {zoom: (parseInt(z.value, 10) || 100) / 100,
+          dx: (parseInt(x.value, 10) || 0) / 100,
+          dy: (parseInt(y.value, 10) || 0) / 100};
 }
 
 /* Il logo NON viene ritagliato: si appoggia sopra al cerchio, tutto visibile.
@@ -1043,7 +1063,7 @@ function disegnaGol(){
   const cx = 540, cy = 915, r = 220;
   ctx.fillStyle = "rgba(250,215,102,0.07)";
   ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
-  if(foto) cerchioImmagine(foto, cx, cy, r);
+  if(foto) cerchioImmagine(foto, cx, cy, r, regolazioneGol());
   else scriviCentratoV("FOTO", cx, cy, 26, "rgba(250,215,102,0.55)", ARIAL, 4);
   ctx.strokeStyle = ORO; ctx.lineWidth = 3;
   ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
@@ -1908,7 +1928,7 @@ function disegnaGolAnimato(tt){              // tt va da 0 a 1 dentro il ciclo
   const cx = 540, cy = 915, r = 220;
   ctx.fillStyle = "rgba(250,215,102,0.07)";
   ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
-  if(foto) cerchioImmagine(foto, cx, cy, r);
+  if(foto) cerchioImmagine(foto, cx, cy, r, regolazioneGol());
   else scriviCentratoV("CLIP", cx, cy, 26, "rgba(250,215,102,0.55)", ARIAL, 4);
   ctx.strokeStyle = "rgba(250,215,102," + (0.85 * (1 - tt) + 0.15).toFixed(3) + ")";
   ctx.lineWidth = 4;
@@ -2122,6 +2142,12 @@ $("r-momento").onchange = disegna;
 $("m-invert").onchange = disegna;
 $("s-tipo").onchange = disegna;
 $("c-volto").onchange = disegna;
+["g-zoom", "g-ox", "g-oy"].forEach(function(id){
+  $(id).oninput = function(){
+    if(id === "g-zoom") $("g-zoom-v").textContent = $(id).value + "%";
+    disegna();
+  };
+});
 $("c-lista").oninput = disegna;
 
 $("c-handle").value = CFG.handle;
