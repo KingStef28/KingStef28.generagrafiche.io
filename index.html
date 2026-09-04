@@ -111,7 +111,16 @@
 
   <!-- ---------- GOL ---------- -->
   <div id="p-gol">
-    <div class="sez">Marcatore</div>
+    <div class="sez">Evento</div>
+    <label class="f"><span>Tipo</span>
+      <select id="g-tipo">
+        <option value="gol">Gol</option>
+        <option value="rig">Rigore parato</option>
+      </select></label>
+    <label class="f"><span>Titolo personalizzato (facoltativo)</span>
+      <input id="g-titolo" type="text" placeholder="Es. Che parata!" autocomplete="off"></label>
+
+    <div class="sez">Protagonista</div>
     <div class="row">
       <label class="f"><span>Nome sulla grafica</span>
         <input id="g-nome" type="text" placeholder="Cognome" autocomplete="off"></label>
@@ -230,6 +239,12 @@
       <select id="s-tipo">
         <option value="ric">Riconferma</option>
         <option value="new">Nuovo acquisto</option>
+      </select></label>
+    <label class="f"><span>Riguarda</span>
+      <select id="s-chi">
+        <option value="gio">Giocatori</option>
+        <option value="all">Allenatori e staff</option>
+        <option value="mix">Squadra e staff insieme</option>
       </select></label>
     <label class="f"><span>Riga in alto</span>
       <input id="s-stagione" type="text" placeholder="Stagione 2025/26" autocomplete="off"></label>
@@ -1081,7 +1096,9 @@ const val = i => ($(i).value || "").trim();
 function disegnaGol(){
   T = TEMI.scuro; mutoAtt = T.muto;
   sfondo();
-  testoOro("GOL!", 540, 520, 212, 4);
+  const rigore = $("g-tipo").value === "rig";
+  const titolo = (val("g-titolo") || (rigore ? "Rigore parato" : "Gol!")).toUpperCase();
+  testoOro(titolo, 540, 520, adattaTesto(titolo, 212, 880, "Anton", 4), 4);
 
   const RX = 300, RY = 606, RW = 480, RH = 580, RR = 46;
   rett(RX, RY, RW, RH, RR); ctx.fillStyle = "rgba(250,215,102,0.07)"; ctx.fill();
@@ -1377,8 +1394,18 @@ function disegnaRosa(){
   scriviLimitato(val("s-stagione").toUpperCase(), 540, L.rosaTipo, L.tipoS, 16, 820,
                  T.inch, SERIF, L.tipoLS);
 
+  const chi = $("s-chi").value;
   const t1 = nuovoAcq ? (n > 1 ? "NUOVI" : "NUOVO") : "RICONFERMA";
-  const t2 = nuovoAcq ? (n > 1 ? "acquisti" : "acquisto") : "dei giocatori";
+  let t2;
+  if(nuovoAcq){
+    if(chi === "all")      t2 = n > 1 ? "allenatori" : "allenatore";
+    else if(chi === "mix") t2 = n > 1 ? "innesti" : "innesto";
+    else                   t2 = n > 1 ? "acquisti" : "acquisto";
+  } else {
+    if(chi === "all")      t2 = n > 1 ? "degli allenatori" : "dell'allenatore";
+    else if(chi === "mix") t2 = "della rosa";
+    else                   t2 = n > 1 ? "dei giocatori" : "del giocatore";
+  }
   scrivi(t1, 540, L.rosaT1, adattaTesto(t1, L.rosaT1S, 880, "Anton", 3), T.inch, "Anton", 3);
   const fontCorsivo = function(v){ return "italic bold " + v + "px " + SERIF; };
   testoOro(t2, 540, L.rosaT2, adattaConFont(t2, L.rosaT2S, 800, fontCorsivo), 1,
@@ -1411,9 +1438,15 @@ function disegnaRosa(){
 
   const by = L.box, bh = L.boxH;
   pannello(140, by, 800, bh);
-  const r1 = val("s-riga1") || (nuovoAcq
-    ? (n > 1 ? "Nuovi tesseramenti ufficiali" : "Nuovo tesseramento ufficiale")
-    : (n > 1 ? "Lista ufficiale giocatori confermati" : "Lista ufficiale giocatore confermato"));
+  let pre;
+  if(nuovoAcq)
+    pre = chi === "all" ? (n > 1 ? "Nuovi incarichi tecnici ufficiali" : "Nuovo incarico tecnico ufficiale")
+                        : (n > 1 ? "Nuovi tesseramenti ufficiali" : "Nuovo tesseramento ufficiale");
+  else
+    pre = chi === "all" ? (n > 1 ? "Conferma ufficiale dello staff tecnico" : "Conferma ufficiale dell'allenatore")
+        : chi === "mix" ? "Lista ufficiale dei confermati"
+        : (n > 1 ? "Lista ufficiale giocatori confermati" : "Lista ufficiale giocatore confermato");
+  const r1 = val("s-riga1") || pre;
   const r2 = val("s-riga2") || "Società e dirigenza";
   scriviLimitato(r1.toUpperCase(), 540, by + bh * 0.35, Math.round(L.infoS * 0.92), 20, 700,
                  ORO_CHIARO, "Anton", 0);
@@ -1941,9 +1974,11 @@ function disegnaGolAnimato(tt){              // tt va da 0 a 1 dentro il ciclo
   const sca = 1 + 0.025 * Math.sin(2*Math.PI*3*tt);
   ctx.save();
   ctx.translate(540 + dx, 470 + dy); ctx.rotate(rot); ctx.scale(sca, sca);
+  const rigore = $("g-tipo").value === "rig";
+  const testoT = (val("g-titolo") || (rigore ? "Parataaa!" : "Goooool!")).toUpperCase();
   ctx.font = "200px Anton";
-  const largh = ctx.measureText("GOOOOL!").width || 1;
-  testoOro("GOOOOL!", 0, 0, 200 * 880 / largh, 4);
+  const largh = ctx.measureText(testoT).width || 1;
+  testoOro(testoT, 0, 0, Math.min(212, 200 * 880 / largh), 4);
   ctx.restore();
 
   const RX = 300, RY = 606, RW = 480, RH = 580, RR = 46;
@@ -2120,7 +2155,8 @@ function rendiFormato(nome){
 }
 
 $("gen").onclick = function(){
-  const base = scheda === "gol" ? "gol" : (scheda === "md" ? "match-day"
+  const base = scheda === "gol" ? ($("g-tipo").value === "rig" ? "rigore-parato" : "gol")
+               : (scheda === "md" ? "match-day"
                : (scheda === "ris" ? "risultato"
                : (scheda === "conv" ? "convocati"
                : (scheda === "cal" ? "calendario"
@@ -2162,6 +2198,8 @@ $("codec").onchange = mostraDiagnostica;
 $("r-momento").onchange = disegna;
 $("m-invert").onchange = disegna;
 $("s-tipo").onchange = disegna;
+$("s-chi").onchange = disegna;
+$("g-tipo").onchange = disegna;
 $("c-volto").onchange = disegna;
 ["g-zoom", "g-ox", "g-oy"].forEach(function(id){
   $(id).oninput = function(){
