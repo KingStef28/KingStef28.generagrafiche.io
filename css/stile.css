@@ -1,0 +1,79 @@
+@font-face{
+    font-family:"Anton";
+    src:url("../assets/Anton-sub.woff2") format("woff2");
+    font-weight:400; font-style:normal; font-display:block;
+  }
+  *{box-sizing:border-box}
+  :root{
+    --nero:#0B0B0B; --pannello:#161616; --bordo:#2A2A2A;
+    --giallo:#FFD400; --inch:#F5F5F2; --muto:#8F8F88;
+  }
+  html,body{margin:0;background:var(--nero);color:var(--inch);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    -webkit-text-size-adjust:100%}
+  .wrap{max-width:520px;margin:0 auto;padding:0 16px 48px}
+
+  .top{position:sticky;top:0;z-index:10;background:var(--nero);
+    padding:14px 0 10px;border-bottom:1px solid var(--bordo)}
+  .tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+  .tab{flex:1 1 22%;min-width:0;padding:13px 2px;border:1px solid var(--bordo);background:#111;
+    color:var(--muto);border-radius:10px;font:600 clamp(10px,3.1vw,13px)/1 inherit;
+    letter-spacing:.01em;text-transform:uppercase;white-space:nowrap;cursor:pointer}
+  .check{display:flex;align-items:center;gap:11px;margin:4px 0 14px;padding:13px 12px;
+    background:var(--pannello);border:1px solid var(--bordo);border-radius:9px;cursor:pointer}
+  .check input{width:22px;height:22px;accent-color:var(--giallo);flex:0 0 auto}
+  .check span{font-size:14px;color:var(--inch)}
+  .nota{margin:-2px 0 12px;font-size:12.5px;line-height:1.5;color:var(--muto)}
+  .tab:focus-visible{outline:2px solid var(--giallo);outline-offset:2px}
+  .tab.on{background:var(--giallo);border-color:var(--giallo);color:#0A0A0A}
+  .stage{display:flex;justify-content:center}
+  canvas{width:auto;height:38vh;max-height:340px;max-width:100%;
+    border-radius:8px;background:#000;display:block}
+
+  .sez{margin:22px 0 10px;font:700 12px/1 inherit;letter-spacing:.2em;
+    text-transform:uppercase;color:var(--giallo)}
+  .row{display:flex;gap:10px}
+  .f{display:block;flex:1;margin-bottom:12px}
+  .f span{display:block;margin-bottom:6px;font-size:12px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--muto)}
+  .f textarea{min-height:190px;resize:vertical;line-height:1.55}
+  .f input[type=range]{width:100%;padding:0;height:34px;background:transparent;border:0;
+    accent-color:var(--giallo)}
+  .f span b{float:right;font-weight:700;color:var(--giallo);letter-spacing:0}
+  .f input, .f select, .f textarea{width:100%;padding:13px 12px;background:var(--pannello);
+    border:1px solid var(--bordo);border-radius:9px;color:var(--inch);
+    font:400 16px/1.2 inherit;-webkit-appearance:none;appearance:none}
+  .f select{background-image:linear-gradient(45deg,transparent 50%,var(--muto) 50%),
+    linear-gradient(135deg,var(--muto) 50%,transparent 50%);
+    background-position:calc(100% - 20px) 22px,calc(100% - 14px) 22px;
+    background-size:6px 6px,6px 6px;background-repeat:no-repeat}
+  .f input:focus, .f select:focus, .f textarea:focus{outline:none;border-color:var(--giallo)}
+  .f.mini{flex:0 0 96px}
+
+  .file{display:block;margin-bottom:12px}
+  .file input{position:absolute;width:1px;height:1px;opacity:0}
+  .file span{display:block;padding:13px 12px;background:var(--pannello);
+    border:1px dashed var(--bordo);border-radius:9px;color:var(--muto);
+    font-size:14px;text-align:center;cursor:pointer}
+  .file input:focus-visible + span{border-color:var(--giallo);color:var(--inch)}
+  .file span.pieno{border-style:solid;border-color:var(--giallo);color:var(--inch)}
+
+  .gens{display:flex;gap:10px;margin-top:18px}
+  .gen{flex:1;padding:18px 10px;border:0;border-radius:11px;
+    background:var(--giallo);color:#0A0A0A;font:400 26px/1 "Anton",Impact,sans-serif;
+    letter-spacing:.04em;cursor:pointer}
+  .gen.alt{background:transparent;border:2px solid var(--giallo);color:var(--giallo)}
+  .gen:active{transform:translateY(1px)}
+  .gen:disabled{opacity:.45;cursor:default}
+  .gen:focus-visible{outline:3px solid #fff;outline-offset:3px}
+  .stato{margin:12px 0 0;min-height:20px;text-align:center;font-size:14px;color:var(--giallo)}
+
+  .out{margin-top:22px;text-align:center}
+  .out img{width:100%;border-radius:8px}
+  .uscita{display:inline-block;width:46%;margin:0 1.5% 14px;vertical-align:top}
+  .uscita .et{margin:0 0 7px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--giallo)}
+  .out a{display:inline-block;margin-top:14px;padding:12px 20px;border-radius:9px;
+    border:1px solid var(--giallo);color:var(--giallo);text-decoration:none;font-size:15px}
+  .out p{margin:12px 0 0;font-size:13px;color:var(--muto);line-height:1.5}
+  .nascosto{display:none}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
