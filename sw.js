@@ -1,6 +1,6 @@
 /* Service worker: tiene in cache tutto il necessario, così al campo
    la grafica funziona anche senza rete. Cambia VERSIONE dopo ogni modifica. */
-const VERSIONE = "vdl-1";
+const VERSIONE = "vdl-2";
 const FILE = [
   "./", "./index.html", "./css/stile.css",
   "./assets/facefinder", "./assets/Anton-sub.woff2",

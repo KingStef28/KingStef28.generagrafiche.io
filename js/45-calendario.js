@@ -121,22 +121,42 @@ function disegnaCal(){
   testoOro(tit, 540, L.convT, adattaTesto(tit, L.convTS, 860, "Anton", 2), 2);
 
   const n = quanteCal();
-  const nRighe = Math.ceil(n / 2);
-  const lh = Math.min(L.calH * 0.080, (L.calH * 0.94) / nRighe);
-  const fs = Math.max(15, Math.round(lh * 0.58));
+  const unaColonna = n <= 8;                 // fino a 8 sta comoda una colonna sola
+  const colonne = unaColonna ? 1 : 2;
+  const nRighe = Math.ceil(n / colonne);
+  const lh = Math.min(L.calH * (unaColonna ? 0.108 : 0.080), (L.calH * 0.94) / nRighe);
+  const fs = Math.max(15, Math.round(lh * (unaColonna ? 0.50 : 0.58)));
   const y0 = L.calY + (L.calH - nRighe * lh) / 2 + lh * 0.5;
-  const cw = 450, colx = [315, 765];
+
+  // un solo corpo per tutti i nomi: quello che fa entrare il più lungo
+  const largNome = unaColonna ? 600 : 265;
+  const nomi = [];
+  let fsNomi = fs;
+  for(let i = 0; i < n; i++){
+    const nm = val("cal-sq" + (i + 1)).toUpperCase();
+    nomi.push(nm);
+    if(nm) fsNomi = Math.min(fsNomi, adattaTesto(nm, fs, largNome, "Anton", 0));
+  }
+  let maxNome = 0;
+  nomi.forEach(function(nm){
+    if(nm) maxNome = Math.max(maxNome, larghezzaTesto(nm, fsNomi, "Anton", 0));
+  });
+
+  // icone incolonnate e nomi allineati: il blocco è centrato sul nome più lungo
+  const largIcona = fs * 1.35, spazio = fs * 0.55;
+  const largBlocco = largIcona + spazio + maxNome;
+  const centri = unaColonna ? [540] : [315, 765];
 
   for(let i = 0; i < n; i++){
-    const c = i < nRighe ? 0 : 1;
-    const y = y0 + (i < nRighe ? i : i - nRighe) * lh;
+    const c = Math.floor(i / nRighe);
+    const y = y0 + (i - c * nRighe) * lh;
+    const sx = centri[c] - largBlocco / 2;
     const casa = $("cal-dove" + (i + 1)).value === "c";
-    if(casa) iconaCasa(colx[c] - cw * 0.33, y, fs * 1.02, ORO_CHIARO);
-    else     iconaAereo(colx[c] - cw * 0.33, y, fs * 1.10, ORO);
-    const nome = val("cal-sq" + (i + 1)).toUpperCase();
-    const sn = adattaTesto(nome, fs, cw * 0.60, "Anton", 0);
-    scrivi(nome, colx[c] - cw * 0.24, y + centroInk(nome, sn, "Anton", 0),
-           sn, ORO_CHIARO, "Anton", 0, "left");
+    if(casa) iconaCasa(sx + largIcona / 2, y, fs * 1.02, ORO_CHIARO);
+    else     iconaAereo(sx + largIcona / 2, y, fs * 1.18, ORO);
+    if(nomi[i])
+      scrivi(nomi[i], sx + largIcona + spazio, y + centroInk(nomi[i], fsNomi, "Anton", 0),
+             fsNomi, ORO_CHIARO, "Anton", 0, "left");
   }
   piede();
 }
