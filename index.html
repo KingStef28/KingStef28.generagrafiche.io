@@ -166,10 +166,12 @@
         <option value="gio">Giocatori</option>
         <option value="all">Allenatori e staff</option>
         <option value="mix">Squadra e staff insieme</option>
+        <option value="duo">Allenatore e vice (foto unica)</option>
       </select></label>
     <label class="f"><span>Riga in alto</span>
       <input id="s-stagione" type="text" placeholder="Stagione 2025/26" autocomplete="off"></label>
 
+    <div id="rosa-campi">
     <label class="f"><span>Quanti giocatori</span>
       <select id="s-quanti">
         <option value="1">1</option>
@@ -192,6 +194,12 @@
         <input id="s-ruolo1" type="text" placeholder="Portiere" autocomplete="off"></label>
       <label class="file"><input id="s-foto1" type="file" accept="image/*,.gif">
         <span id="s-foto1-l">Scegli la foto</span></label>
+      <label class="f"><span>Zoom <b id="s-zoom1-v">100%</b></span>
+        <input id="s-zoom1" type="range" min="100" max="300" value="100"></label>
+      <label class="f"><span>Alza o abbassa</span>
+        <input id="s-oy1" type="range" min="-100" max="100" value="0"></label>
+      <label class="f"><span>Sposta a destra o sinistra</span>
+        <input id="s-ox1" type="range" min="-100" max="100" value="0"></label>
     </div>
     <div id="g-blocco2" class="nascosto">
       <div class="sez">Giocatore 2</div>
@@ -201,6 +209,12 @@
         <input id="s-ruolo2" type="text" placeholder="Portiere" autocomplete="off"></label>
       <label class="file"><input id="s-foto2" type="file" accept="image/*,.gif">
         <span id="s-foto2-l">Scegli la foto</span></label>
+      <label class="f"><span>Zoom <b id="s-zoom2-v">100%</b></span>
+        <input id="s-zoom2" type="range" min="100" max="300" value="100"></label>
+      <label class="f"><span>Alza o abbassa</span>
+        <input id="s-oy2" type="range" min="-100" max="100" value="0"></label>
+      <label class="f"><span>Sposta a destra o sinistra</span>
+        <input id="s-ox2" type="range" min="-100" max="100" value="0"></label>
     </div>
     <div id="g-blocco3" class="nascosto">
       <div class="sez">Giocatore 3</div>
@@ -210,6 +224,12 @@
         <input id="s-ruolo3" type="text" placeholder="Portiere" autocomplete="off"></label>
       <label class="file"><input id="s-foto3" type="file" accept="image/*,.gif">
         <span id="s-foto3-l">Scegli la foto</span></label>
+      <label class="f"><span>Zoom <b id="s-zoom3-v">100%</b></span>
+        <input id="s-zoom3" type="range" min="100" max="300" value="100"></label>
+      <label class="f"><span>Alza o abbassa</span>
+        <input id="s-oy3" type="range" min="-100" max="100" value="0"></label>
+      <label class="f"><span>Sposta a destra o sinistra</span>
+        <input id="s-ox3" type="range" min="-100" max="100" value="0"></label>
     </div>
     <div id="g-blocco4" class="nascosto">
       <div class="sez">Giocatore 4</div>
@@ -219,6 +239,12 @@
         <input id="s-ruolo4" type="text" placeholder="Portiere" autocomplete="off"></label>
       <label class="file"><input id="s-foto4" type="file" accept="image/*,.gif">
         <span id="s-foto4-l">Scegli la foto</span></label>
+      <label class="f"><span>Zoom <b id="s-zoom4-v">100%</b></span>
+        <input id="s-zoom4" type="range" min="100" max="300" value="100"></label>
+      <label class="f"><span>Alza o abbassa</span>
+        <input id="s-oy4" type="range" min="-100" max="100" value="0"></label>
+      <label class="f"><span>Sposta a destra o sinistra</span>
+        <input id="s-ox4" type="range" min="-100" max="100" value="0"></label>
     </div>
     <div id="g-blocco5" class="nascosto">
       <div class="sez">Giocatore 5</div>
@@ -228,6 +254,12 @@
         <input id="s-ruolo5" type="text" placeholder="Portiere" autocomplete="off"></label>
       <label class="file"><input id="s-foto5" type="file" accept="image/*,.gif">
         <span id="s-foto5-l">Scegli la foto</span></label>
+      <label class="f"><span>Zoom <b id="s-zoom5-v">100%</b></span>
+        <input id="s-zoom5" type="range" min="100" max="300" value="100"></label>
+      <label class="f"><span>Alza o abbassa</span>
+        <input id="s-oy5" type="range" min="-100" max="100" value="0"></label>
+      <label class="f"><span>Sposta a destra o sinistra</span>
+        <input id="s-ox5" type="range" min="-100" max="100" value="0"></label>
     </div>
     <div id="g-blocco6" class="nascosto">
       <div class="sez">Giocatore 6</div>
@@ -237,6 +269,12 @@
         <input id="s-ruolo6" type="text" placeholder="Portiere" autocomplete="off"></label>
       <label class="file"><input id="s-foto6" type="file" accept="image/*,.gif">
         <span id="s-foto6-l">Scegli la foto</span></label>
+      <label class="f"><span>Zoom <b id="s-zoom6-v">100%</b></span>
+        <input id="s-zoom6" type="range" min="100" max="300" value="100"></label>
+      <label class="f"><span>Alza o abbassa</span>
+        <input id="s-oy6" type="range" min="-100" max="100" value="0"></label>
+      <label class="f"><span>Sposta a destra o sinistra</span>
+        <input id="s-ox6" type="range" min="-100" max="100" value="0"></label>
     </div>
     <div id="g-blocco7" class="nascosto">
       <div class="sez">Giocatore 7</div>
@@ -246,6 +284,12 @@
         <input id="s-ruolo7" type="text" placeholder="Portiere" autocomplete="off"></label>
       <label class="file"><input id="s-foto7" type="file" accept="image/*,.gif">
         <span id="s-foto7-l">Scegli la foto</span></label>
+      <label class="f"><span>Zoom <b id="s-zoom7-v">100%</b></span>
+        <input id="s-zoom7" type="range" min="100" max="300" value="100"></label>
+      <label class="f"><span>Alza o abbassa</span>
+        <input id="s-oy7" type="range" min="-100" max="100" value="0"></label>
+      <label class="f"><span>Sposta a destra o sinistra</span>
+        <input id="s-ox7" type="range" min="-100" max="100" value="0"></label>
     </div>
     <div id="g-blocco8" class="nascosto">
       <div class="sez">Giocatore 8</div>
@@ -255,6 +299,39 @@
         <input id="s-ruolo8" type="text" placeholder="Portiere" autocomplete="off"></label>
       <label class="file"><input id="s-foto8" type="file" accept="image/*,.gif">
         <span id="s-foto8-l">Scegli la foto</span></label>
+      <label class="f"><span>Zoom <b id="s-zoom8-v">100%</b></span>
+        <input id="s-zoom8" type="range" min="100" max="300" value="100"></label>
+      <label class="f"><span>Alza o abbassa</span>
+        <input id="s-oy8" type="range" min="-100" max="100" value="0"></label>
+      <label class="f"><span>Sposta a destra o sinistra</span>
+        <input id="s-ox8" type="range" min="-100" max="100" value="0"></label>
+    </div>
+    </div>
+
+    <div id="duo-campi" class="nascosto">
+      <div class="sez">Foto unica</div>
+      <label class="file"><input id="s-fotoduo" type="file" accept="image/*,video/*">
+        <span id="s-fotoduo-l">Scegli la foto con entrambi</span></label>
+      <label class="f"><span>Zoom <b id="s-zoom-v">100%</b></span>
+        <input id="s-zoom" type="range" min="100" max="300" value="100"></label>
+      <label class="f"><span>Alza o abbassa l'inquadratura</span>
+        <input id="s-oy" type="range" min="-100" max="100" value="0"></label>
+      <label class="f"><span>Sposta a destra o sinistra</span>
+        <input id="s-ox" type="range" min="-100" max="100" value="0"></label>
+
+      <div class="sez">Didascalia a sinistra</div>
+      <label class="f"><span>Nome</span>
+        <input id="d-nome1" type="text" placeholder="Mario Rossi" autocomplete="off"></label>
+      <label class="f"><span>Ruolo</span>
+        <input id="d-ruolo1" type="text" placeholder="Allenatore" autocomplete="off"></label>
+
+      <div class="sez">Didascalia a destra</div>
+      <label class="f"><span>Nome</span>
+        <input id="d-nome2" type="text" placeholder="Luca Bianchi" autocomplete="off"></label>
+      <label class="f"><span>Ruolo</span>
+        <input id="d-ruolo2" type="text" placeholder="Vice allenatore" autocomplete="off"></label>
+      <p class="nota">Con la foto unica il riconoscimento del volto è disattivato:
+        con due persone inquadrerebbe una sola. Usa i cursori.</p>
     </div>
 
     <div class="sez">Riquadro in basso</div>

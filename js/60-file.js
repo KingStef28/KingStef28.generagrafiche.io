@@ -284,6 +284,7 @@ collegaFile("m-losp",  "m-losp-l",  "Stemma ospite",  i => logoOsp = i);
 for(let k = 1; k <= 8; k++){
   (function(i){
     collegaFile("v-foto", "v-foto-l", "Foto MVP", function(m){ fotoMvp = m; });
+    collegaFile("s-fotoduo", "s-fotoduo-l", "Foto", function(m){ fotoDuo = m; });
     collegaFile("s-foto" + i, "s-foto" + i + "-l", "Foto giocatore " + i,
                 function(m){ fotoRosa[i - 1] = m; });
   })(k);
@@ -317,6 +318,9 @@ function aggiornaCampiCal(){
 $("cal-quante").onchange = function(){ aggiornaCampiCal(); disegna(); };
 
 function aggiornaCampiRosa(){
+  const duo = $("s-chi").value === "duo";
+  $("rosa-campi").classList.toggle("nascosto", duo);
+  $("duo-campi").classList.toggle("nascosto", !duo);
   const n = quantiRosa();
   for(let k = 1; k <= 8; k++) $("g-blocco" + k).classList.toggle("nascosto", k > n);
 }

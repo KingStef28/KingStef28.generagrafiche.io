@@ -53,10 +53,26 @@ $("codec").onchange = mostraDiagnostica;
 $("r-momento").onchange = disegna;
 $("m-invert").onchange = disegna;
 $("s-tipo").onchange = disegna;
-$("s-chi").onchange = disegna;
+$("s-chi").onchange = function(){ aggiornaCampiRosa(); disegna(); };
 $("g-tipo").onchange = disegna;
 $("c-volto").onchange = disegna;
 $("v-opaco").onchange = disegna;
+for(let k = 1; k <= 8; k++){
+  (function(i){
+    ["s-zoom", "s-ox", "s-oy"].forEach(function(pre){
+      $(pre + i).oninput = function(){
+        if(pre === "s-zoom") $("s-zoom" + i + "-v").textContent = $(pre + i).value + "%";
+        disegna();
+      };
+    });
+  })(k);
+}
+["s-zoom","s-ox","s-oy"].forEach(function(id){
+  $(id).oninput = function(){
+    if(id === "s-zoom") $("s-zoom-v").textContent = $(id).value + "%";
+    disegna();
+  };
+});
 ["g-zoom","g-ox","g-oy","v-zoom","v-ox","v-oy"].forEach(function(id){
   $(id).oninput = function(){
     if(id === "g-zoom") $("g-zoom-v").textContent = $(id).value + "%";

@@ -67,11 +67,11 @@ function misura(m){
 }
 /* Come cerchioImmagine ma su un rettangolo ad angoli arrotondati:
    la forma verticale segue la figura del giocatore. */
-function rettImmagine(img, X, Y, W, H, R, reg){
+function rettImmagine(img, X, Y, W, H, R, reg, ignoraVolto){
   const d = misura(img);
   if(!d[0] || !d[1]) return;
   const coprire = Math.max(W / d[0], H / d[1]);
-  const v = ($("c-volto") && $("c-volto").checked) ? trovaVolto(img) : null;
+  const v = (!ignoraVolto && $("c-volto") && $("c-volto").checked) ? trovaVolto(img) : null;
   let s = coprire, fx = d[0] / 2, fy = d[1] / 2, alt = 0;
   if(v && v.d > 0){
     s = Math.max(coprire, Math.min(coprire * 3, 0.34 * W / v.d));
