@@ -132,10 +132,10 @@ function disegnaRosa(){
   const marg = 54;
   const cellW = (L.W - 2 * marg) / colonne;
   const cellH = L.rosaGridH / righe;
-  const nomeS = Math.min(L.rosaNomeS, Math.round(cellW * 0.16));
-  const ruoloS = Math.max(15, Math.round(nomeS * 0.62));
-  const r = Math.min(cellW * 0.42, (cellH - nomeS - ruoloS - 46) / 2, L.rosaFotoR);
-  const contenuto = 2 * r + 18 + nomeS * 0.73 + ruoloS * 1.35;
+  const nomeS = Math.min(L.rosaNomeS, Math.round(cellW * 0.105));
+  const ruoloS = Math.max(14, Math.round(nomeS * 0.58));
+  const r = Math.min(cellW * 0.44, (cellH - nomeS * 0.73 - ruoloS * 1.35 - 26) / 2, L.rosaFotoR);
+  const contenuto = 2 * r + 16 + nomeS * 0.73 + ruoloS * 1.35;
 
   for(let i = 0; i < n; i++){
     const f = Math.floor(i / colonne), c = i % colonne;
@@ -144,7 +144,7 @@ function disegnaRosa(){
     const cx = marg + scarto + cellW * (c + 0.5);
     const cyTop = L.rosaGridY + cellH * f + (cellH - contenuto) / 2;
     corniceFoto(cx, cyTop + r, r, fotoRosa[i], regolazioneRosa(i + 1));
-    const yn = cyTop + 2 * r + 18 + nomeS * 0.73;
+    const yn = cyTop + 2 * r + 16 + nomeS * 0.73;
     scriviLimitato(val("s-nome" + (i + 1)).toUpperCase(), cx, yn, nomeS, 18,
                    cellW * 0.92, T.inch, "Anton", 1);
     scriviLimitato(val("s-ruolo" + (i + 1)).toUpperCase(), cx, yn + ruoloS * 1.35, ruoloS, 13,
