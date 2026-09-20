@@ -80,7 +80,7 @@ for(let k = 1; k <= 8; k++){
     disegna();
   };
 });
-$("c-lista").oninput = disegna;
+["c-por", "c-dif", "c-cen", "c-att"].forEach(function(id){ $(id).oninput = disegna; });
 
 $("c-handle").value = CFG.handle;
 $("c-tag").value = CFG.hashtag;

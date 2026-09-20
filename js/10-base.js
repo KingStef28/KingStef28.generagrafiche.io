@@ -39,7 +39,8 @@ const FORMATI = {
             duoRuolo:1348, duoRuoloS:40,
             calY:660, calH:960,
             convLogo:252, convLogoR:108, convTipo:430,
-            convT:590, convTS:120, listaY:720, listaH:900,
+            convT:590, convTS:120, convOrario:716, convOrarioS:40,
+            listaY:770, listaH:850,
             piede:1756, piedeS:27 },
   post:   { W:1080, H:1350, bordo:40, fregio:68, angolo:156,
             tipo:158, tipoS:27, tipoLS:7,
@@ -55,7 +56,8 @@ const FORMATI = {
             duoRuolo:968, duoRuoloS:32,
             calY:500, calH:610,
             convLogo:196, convLogoR:88, convTipo:330,
-            convT:450, convTS:94, listaY:545, listaH:620,
+            convT:450, convTS:94, convOrario:548, convOrarioS:32,
+            listaY:590, listaH:575,
             piede:1268, piedeS:23 }
 };
 let L = FORMATI.storia;
