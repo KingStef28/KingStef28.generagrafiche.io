@@ -57,6 +57,11 @@ $("s-chi").onchange = function(){ aggiornaCampiRosa(); disegna(); };
 $("g-tipo").onchange = disegna;
 $("c-volto").onchange = disegna;
 $("v-opaco").onchange = disegna;
+$("v-modo").onchange = function(){ apri("mvp"); };
+$("r-rig").onchange = function(){
+  $("rig-campi").classList.toggle("nascosto", !$("r-rig").checked);
+  disegna();
+};
 for(let k = 1; k <= 8; k++){
   (function(i){
     ["s-zoom", "s-ox", "s-oy"].forEach(function(pre){

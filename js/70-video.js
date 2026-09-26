@@ -69,6 +69,11 @@ function primoSupportato(lista){
   return null;
 }
 
+function nomeVideo(){
+  if(scheda === "mvp") return "mvp";
+  return $("g-tipo").value === "rig" ? "rigore-parato" : "gol";
+}
+
 function formatoVideo(){
   const scelta = ($("codec") && $("codec").value) || "auto";
   if(scelta !== "auto" && CODEC[scelta]) return primoSupportato(CODEC[scelta]);
@@ -155,7 +160,7 @@ $("genvid").onclick = function(){
     const o = $("out");
     o.innerHTML = '<video src="' + u + '" controls loop muted playsinline ' +
       'style="width:60%;max-width:220px;border-radius:8px"></video>' +
-      '<br><a href="' + u + '" download="gol.' + est + '">Scarica il video (' +
+      '<br><a href="' + u + '" download="' + nomeVideo() + '.' + est + '">Scarica il video (' +
       nomeCodec(rec.tipoScelto) + ', .' + est + ')</a>' +
       '<p>Su iPhone il file finisce nell\'app File: aprilo, tocca Condividi e scegli' +
       ' “Salva video” per portarlo nelle Foto, poi caricalo nelle storie.</p>';
@@ -181,7 +186,8 @@ $("genvid").onclick = function(){
       try { rec.stop(); } catch(e){ errore("Stop fallito: " + e.message); }
       return;
     }
-    disegnaGolAnimato((trascorso % CICLO) / CICLO);
+    if(scheda === "mvp") disegnaMvp();          // il video scorre dentro il riquadro
+    else disegnaGolAnimato((trascorso % CICLO) / CICLO);
     $("stato").textContent = "Registrazione… " + Math.ceil((DURATA - trascorso) / 1000) + " s";
     requestAnimationFrame(passo);
   })();

@@ -1,11 +1,12 @@
 /* 42-risultato.js
    grafica risultato */
 
-function punteggioGrande(gc, go, x, y, colCifre, colTratto){
+function punteggioGrande(gc, go, x, y, colCifre, colTratto, dim){
+  const D = dim || L.punt;
   const pezzi = [];
-  if(gc) pezzi.push({t: gc, s: L.punt, c: colCifre || T.suFascia, cifra: true});
-  if(gc && go) pezzi.push({barra: true, s: Math.round(L.punt * 0.69), c: colTratto || T.accFascia});
-  if(go) pezzi.push({t: go, s: L.punt, c: colCifre || T.suFascia, cifra: true});
+  if(gc) pezzi.push({t: gc, s: D, c: colCifre || T.suFascia, cifra: true});
+  if(gc && go) pezzi.push({barra: true, s: Math.round(D * 0.69), c: colTratto || T.accFascia});
+  if(go) pezzi.push({t: go, s: D, c: colCifre || T.suFascia, cifra: true});
   if(!pezzi.length) return;
   const MAXW = Math.round(L.rCentro * 1.82);
   let f = 1, tot = 0;
@@ -55,8 +56,14 @@ function disegnaRis(){
       ctx.beginPath(); ctx.arc(p[0], cy, L.rC, 0, Math.PI * 2); ctx.stroke();
     }
   });
-  punteggioGrande(val("r-gc"), val("r-go"), 540, cy + Math.round(L.punt * 0.35),
-                  T.inch, T.acc);
+  const rigori = $("r-rig").checked && (val("r-rgc") || val("r-rgo"));
+  // con i rigori il punteggio sale un po', sotto c'è la seconda riga
+  punteggioGrande(val("r-gc"), val("r-go"), 540,
+                  cy + Math.round(L.punt * 0.35) - (rigori ? L.rigSposta : 0), T.inch, T.acc);
+  if(rigori){
+    punteggioGrande(val("r-rgc"), val("r-rgo"), 540, cy + L.rigY, ORO_CHIARO, ORO, L.rigS);
+    scrivi("DOPO I CALCI DI RIGORE", 540, cy + L.rigY2, L.rigS2, mutoAtt, SERIF, 3);
+  }
 
   scriviLimitato(val("m-casa").toUpperCase(), 250, L.nomi, L.nomiS, 30, L.nomiW, T.inch, "Anton", 1);
   scriviLimitato(val("m-osp").toUpperCase(),  830, L.nomi, L.nomiS, 30, L.nomiW, T.inch, "Anton", 1);
@@ -64,9 +71,21 @@ function disegnaRis(){
   const by = L.box, bh = L.boxH;
   pannello(140, by, 800, bh);
   const marc = val("r-marcatori");
-  if(marc){
-    scrivi("MARCATORI", 540, by + bh * 0.36, L.labS, ORO, SERIF, 3);
-    scriviLimitato(marc.toUpperCase(), 540, by + bh * 0.70, L.marcS, 22, 700, CREMA, "Anton", 0);
+  const rigm = rigori ? val("r-rigmarc") : "";
+  if(marc && rigm){
+    // due sezioni nello stesso riquadro, separate da un filetto
+    scrivi("MARCATORI", 540, by + bh * 0.19, L.labS, ORO, SERIF, 3);
+    scriviLimitato(marc.toUpperCase(), 540, by + bh * 0.39, Math.round(L.marcS * 0.86), 20, 700,
+                   CREMA, "Anton", 0);
+    ctx.beginPath(); ctx.moveTo(400, by + bh * 0.52); ctx.lineTo(680, by + bh * 0.52);
+    ctx.strokeStyle = "rgba(200,155,60,0.5)"; ctx.lineWidth = 1.5; ctx.stroke();
+    scrivi("RIGORI", 540, by + bh * 0.68, L.labS, ORO, SERIF, 3);
+    scriviLimitato(rigm.toUpperCase(), 540, by + bh * 0.87, Math.round(L.marcS * 0.86), 20, 700,
+                   CREMA, "Anton", 0);
+  } else if(marc || rigm){
+    scrivi(marc ? "MARCATORI" : "RIGORI", 540, by + bh * 0.36, L.labS, ORO, SERIF, 3);
+    scriviLimitato((marc || rigm).toUpperCase(), 540, by + bh * 0.70, L.marcS, 22, 700,
+                   CREMA, "Anton", 0);
   }
   piede();
 }

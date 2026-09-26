@@ -28,8 +28,9 @@ function apri(nome){
   $("p-rosa").classList.toggle("nascosto", nome !== "rosa");
   $("p-cal").classList.toggle("nascosto", nome !== "cal");
   $("p-mvp").classList.toggle("nascosto", nome !== "mvp");
-  $("genvid").classList.toggle("nascosto", nome !== "gol");
-  $("codecbox").classList.toggle("nascosto", nome !== "gol");
+  const conVideo = nome === "gol" || (nome === "mvp" && $("v-modo").value === "riquadro");
+  $("genvid").classList.toggle("nascosto", !conVideo);
+  $("codecbox").classList.toggle("nascosto", !conVideo);
   $("postbox").classList.toggle("nascosto", nome === "gol");
   $("voltobox").classList.toggle("nascosto", nome !== "gol" && nome !== "rosa" && nome !== "mvp");
   disegna();

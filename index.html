@@ -129,6 +129,21 @@
     </div>
     <label class="f"><span>Marcatori (facoltativo)</span>
       <input id="r-marcatori" type="text" placeholder="Rossi 12', Bianchi 45+2'" autocomplete="off"></label>
+
+    <label class="check">
+      <input type="checkbox" id="r-rig">
+      <span>Partita decisa ai calci di rigore</span>
+    </label>
+    <div id="rig-campi" class="nascosto">
+      <div class="row">
+        <label class="f"><span>Rigori casa</span>
+          <input id="r-rgc" type="text" inputmode="numeric" placeholder="4" maxlength="2"></label>
+        <label class="f"><span>Rigori ospite</span>
+          <input id="r-rgo" type="text" inputmode="numeric" placeholder="3" maxlength="2"></label>
+      </div>
+      <label class="f"><span>Chi ha segnato i rigori</span>
+        <input id="r-rigmarc" type="text" placeholder="Rossi, Bianchi, Verdi, Neri" autocomplete="off"></label>
+    </div>
     <p class="nota">Nomi delle squadre, stemmi e tipo di partita vengono presi dalla scheda
       Match day: compilala una volta prima del fischio d'inizio.</p>
   </div>
@@ -369,12 +384,17 @@
   <!-- ---------- MVP ---------- -->
   <div id="p-mvp" class="nascosto">
     <div class="sez">Migliore in campo</div>
+    <label class="f"><span>Impaginazione</span>
+      <select id="v-modo">
+        <option value="foto">Foto a tutto schermo</option>
+        <option value="riquadro">Video o foto nel riquadro, come il gol</option>
+      </select></label>
     <label class="f"><span>Titolo</span>
       <input id="v-titolo" type="text" placeholder="MVP" autocomplete="off"></label>
     <label class="f"><span>Nome del giocatore</span>
       <input id="v-nome" type="text" placeholder="Cognome" autocomplete="off"></label>
     <label class="file"><input id="v-foto" type="file" accept="image/*,video/*">
-      <span id="v-foto-l">Scegli la foto del giocatore</span></label>
+      <span id="v-foto-l">Scegli la foto o il video del giocatore</span></label>
     <label class="f"><span>Zoom <b id="v-zoom-v">100%</b></span>
       <input id="v-zoom" type="range" min="100" max="300" value="100"></label>
     <label class="f"><span>Alza o abbassa l'inquadratura</span>
