@@ -14,8 +14,9 @@ $("gen").onclick = function(){
                : (scheda === "ris" ? "risultato"
                : (scheda === "conv" ? "convocati"
                : (scheda === "mvp" ? "mvp"
+               : (scheda === "libero" ? "post-libero"
                : (scheda === "cal" ? "calendario"
-               : ($("s-tipo").value === "new" ? "nuovo-acquisto" : "riconferma"))))));
+               : ($("s-tipo").value === "new" ? "nuovo-acquisto" : "riconferma")))))));
   const doppio = scheda !== "gol" && $("c-post").checked;
   const uscite = [];
   try {
@@ -85,6 +86,7 @@ for(let k = 1; k <= 8; k++){
     disegna();
   };
 });
+$("l-testo").oninput = disegna;
 ["c-por", "c-dif", "c-cen", "c-att"].forEach(function(id){ $(id).oninput = disegna; });
 
 $("c-handle").value = CFG.handle;

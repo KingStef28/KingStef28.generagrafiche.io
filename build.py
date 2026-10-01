@@ -29,6 +29,10 @@ pezzi = [(QUI / "js" / n).read_text() for n in nomi]
 casc = base64.b64encode((QUI / "assets" / "facefinder").read_bytes()).decode()
 pezzi.insert(1, 'const CASCATA_B64 = "%s";' % casc)
 
+# anche il guerriero, come data URI
+guer = base64.b64encode((QUI / "assets" / "guerriero.webp").read_bytes()).decode()
+pezzi.insert(1, 'const GUERRIERO_SRC = "data:image/webp;base64,%s";' % guer)
+
 html = re.sub(r'<link rel="stylesheet" href="css/stile.css">',
               "<style>\n%s\n</style>" % css, html)
 html = re.sub(r'<script src="js/[^"]+"></script>\n?', "", html)

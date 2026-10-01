@@ -26,6 +26,7 @@
       <button class="tab" id="t-rosa" type="button">Rosa</button>
       <button class="tab" id="t-cal" type="button">Calendario</button>
       <button class="tab" id="t-mvp" type="button">MVP</button>
+      <button class="tab" id="t-libero" type="button">Libero</button>
     </div>
     <div class="stage"><canvas id="cv" width="1080" height="1920"></canvas></div>
   </div>
@@ -409,6 +410,23 @@
       dalla scheda Match day, il punteggio dalla scheda Risultato.</p>
   </div>
 
+  <!-- ---------- POST LIBERO ---------- -->
+  <div id="p-libero" class="nascosto">
+    <div class="sez">Testi</div>
+    <label class="f"><span>Riga in alto</span>
+      <input id="l-riga" type="text" placeholder="Comunicazione ufficiale" autocomplete="off"></label>
+    <label class="f"><span>Titolo</span>
+      <input id="l-titolo" type="text" placeholder="Avviso ai tifosi" autocomplete="off"></label>
+    <label class="f"><span>Sottotitolo in corsivo (facoltativo)</span>
+      <input id="l-sotto" type="text" placeholder="domenica si gioca in casa" autocomplete="off"></label>
+    <label class="f"><span>Testo</span>
+      <textarea id="l-testo" placeholder="Ogni a capo inizia un nuovo paragrafo."></textarea></label>
+    <label class="f"><span>Firma (facoltativa)</span>
+      <input id="l-firma" type="text" placeholder="La dirigenza" autocomplete="off"></label>
+    <p class="nota">Il testo gira attorno al guerriero e si rimpicciolisce da solo se è lungo.
+      Lo stemma è quello caricato nella scheda Match day.</p>
+  </div>
+
   <label class="check nascosto" id="voltobox">
     <input type="checkbox" id="c-volto" checked>
     <span>Centra automaticamente sul volto</span>
@@ -448,6 +466,7 @@
 <script src="js/44-rosa.js"></script>
 <script src="js/45-calendario.js"></script>
 <script src="js/46-mvp.js"></script>
+<script src="js/47-libero.js"></script>
 <script src="js/50-schede.js"></script>
 <script src="js/60-file.js"></script>
 <script src="js/70-video.js"></script>

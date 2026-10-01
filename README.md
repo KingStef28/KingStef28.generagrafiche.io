@@ -1,7 +1,7 @@
 # Grafiche Polisportiva Val di Loreto
 
 Strumento per generare le grafiche social della società: match day, convocati,
-gol e rigore parato, risultato, riconferme e nuovi acquisti, calendario, MVP.
+gol e rigore parato, risultato, riconferme e nuovi acquisti, calendario, MVP, post libero.
 Gira interamente nel browser, senza server e senza inviare nulla in rete.
 
 ## Come è fatto
@@ -10,7 +10,7 @@ Gira interamente nel browser, senza server e senza inviare nulla in rete.
 index.html          pagina da pubblicare
 css/stile.css       aspetto dell'interfaccia
 js/                 il codice, diviso per area (vedi sotto)
-assets/             font Anton e cascata per il riconoscimento dei volti
+assets/             font Anton, cascata per il riconoscimento dei volti, guerriero
 sw.js               service worker: fa funzionare tutto anche senza rete
 build.py            ricompone tutto in un unico file offline
 ```
@@ -26,7 +26,7 @@ sia nell'elenco dentro `sw.js`.
 | `20-volti.js` | ricerca del volto e inquadratura delle immagini |
 | `25-loghi.js` | ritaglio e pareggio degli stemmi |
 | `30-stile.js` | temi, cornice, fregi, fasce, pannelli, oro metallico |
-| `40-gol.js` … `46-mvp.js` | una grafica per file |
+| `40-gol.js` … `47-libero.js` | una grafica per file |
 | `50-schede.js` | passaggio da una scheda all'altra |
 | `60-file.js` | caricamento di foto, GIF e video |
 | `70-video.js` | animazione del gol e registrazione |

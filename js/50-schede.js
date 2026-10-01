@@ -8,6 +8,7 @@ function disegna(){
   else if(scheda === "conv") disegnaConv();
   else if(scheda === "rosa") disegnaRosa();
   else if(scheda === "cal") disegnaCal();
+  else if(scheda === "libero") disegnaLibero();
   else disegnaMvp();
 }
 
@@ -21,6 +22,7 @@ function apri(nome){
   $("t-rosa").classList.toggle("on", nome === "rosa");
   $("t-cal").classList.toggle("on", nome === "cal");
   $("t-mvp").classList.toggle("on", nome === "mvp");
+  $("t-libero").classList.toggle("on", nome === "libero");
   $("p-gol").classList.toggle("nascosto", nome !== "gol");
   $("p-md").classList.toggle("nascosto", nome !== "md");
   $("p-ris").classList.toggle("nascosto", nome !== "ris");
@@ -28,6 +30,7 @@ function apri(nome){
   $("p-rosa").classList.toggle("nascosto", nome !== "rosa");
   $("p-cal").classList.toggle("nascosto", nome !== "cal");
   $("p-mvp").classList.toggle("nascosto", nome !== "mvp");
+  $("p-libero").classList.toggle("nascosto", nome !== "libero");
   const conVideo = nome === "gol" || (nome === "mvp" && $("v-modo").value === "riquadro");
   $("genvid").classList.toggle("nascosto", !conVideo);
   $("codecbox").classList.toggle("nascosto", !conVideo);
@@ -42,6 +45,7 @@ $("t-conv").onclick = () => apri("conv");
 $("t-rosa").onclick = () => apri("rosa");
 $("t-cal").onclick = () => apri("cal");
 $("t-mvp").onclick = () => apri("mvp");
+$("t-libero").onclick = () => apri("libero");
 
 document.querySelectorAll("input[type=text]").forEach(function(i){ i.oninput = disegna; });
 
