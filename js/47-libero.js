@@ -1,5 +1,5 @@
 /* 47-libero.js
-   grafica post libero, con il guerriero in basso a destra */
+   il guerriero (usato anche dal calendario) e la grafica post libero */
 
 /* Il guerriero arriva da assets/guerriero.webp, oppure da GUERRIERO_SRC
    nella versione a file unico. */
@@ -7,7 +7,7 @@ const imgGuerriero = new Image();
 let sinistraG = null;              // per ogni riga dell'immagine, primo pixel pieno da sinistra
 imgGuerriero.onload = function(){
   sinistraG = sinistraGuerriero(imgGuerriero);
-  if(scheda === "libero") disegna();
+  if(scheda === "libero" || scheda === "cal") disegna();
 };
 imgGuerriero.onerror = function(){ sinistraG = null; };
 imgGuerriero.src = typeof GUERRIERO_SRC === "string" ? GUERRIERO_SRC : "assets/guerriero.webp";
@@ -21,6 +21,32 @@ function sinistraGuerriero(img){
     for(let x = 0; x < img.width; x++)
       if(p[(y * img.width + x) * 4 + 3] > 40){ out[y] = x; break; }
   return out;
+}
+
+/* Guerriero in basso a destra, alto hW, che esce di sp oltre il bordo destro.
+   limite(yA, yB, gap): la x più a sinistra della sagoma fra yA e yB, meno gap. */
+function posaGuerriero(hW, sp){
+  const img = imgGuerriero, sin = sinistraG;
+  const sc = sin ? hW / img.height : 1, wW = sin ? img.width * sc : 0;
+  const gx = L.W + sp - wW, gy = L.H - hW;
+  return {
+    limite: function(yA, yB, gap){
+      let lim = Infinity;
+      if(!sin) return lim;
+      for(let y = Math.floor(yA - gap); y <= yB + gap; y += 2){
+        const r = Math.floor((y - gy) / sc);
+        if(r >= 0 && r < sin.length && sin[r] < Infinity) lim = Math.min(lim, gx + sin[r] * sc - gap);
+      }
+      return lim;
+    },
+    disegna: function(ombra, blur, ox, oy){
+      if(!sin) return;
+      ctx.save();
+      ctx.shadowColor = ombra; ctx.shadowBlur = blur; ctx.shadowOffsetX = ox; ctx.shadowOffsetY = oy;
+      ctx.drawImage(img, gx, gy, wW, hW);
+      ctx.restore();
+    }
+  };
 }
 
 /* Va a capo girando attorno alla sagoma: ogni riga è larga quanto lo spazio
@@ -59,20 +85,9 @@ function disegnaLibero(){
   const destraMax = L.W - b - 64;
 
   // guerriero in basso a destra: esce dalla cornice, lo scudo tagliato dal bordo
-  const img = imgGuerriero, sin = sinistraG;
-  const hW = storia ? 1000 : 820;
-  const sc = sin ? hW / img.height : 1, wW = sin ? img.width * sc : 0;
-  const gx = L.W + (storia ? 96 : 30) - wW, gy = L.H - hW;
-  function limite(yA, yB){
-    let lim = destraMax;
-    if(!sin) return lim;
-    const gap = storia ? 30 : 26;
-    for(let y = Math.floor(yA - gap); y <= yB + gap; y += 2){
-      const r = Math.floor((y - gy) / sc);
-      if(r >= 0 && r < sin.length && sin[r] < Infinity) lim = Math.min(lim, gx + sin[r] * sc - gap);
-    }
-    return lim;
-  }
+  const G = posaGuerriero(storia ? 1000 : 820, storia ? 96 : 30);
+  const gap = storia ? 30 : 26;
+  function limite(yA, yB){ return Math.min(destraMax, G.limite(yA, yB, gap)); }
 
   // carta intestata: stemma annidato nell'angolo, accanto riga e piede
   const cc = b + S, rS = storia ? 72 : 58;
@@ -149,13 +164,6 @@ function disegnaLibero(){
   }
 
   // guerriero per ultimo, con ombra: rompe la cornice in basso e a destra
-  if(sin){
-    ctx.save();
-    ctx.shadowColor = "rgba(0,0,0,0.42)";
-    ctx.shadowBlur = storia ? 38 : 30;
-    ctx.shadowOffsetX = storia ? -12 : -9; ctx.shadowOffsetY = storia ? 10 : 8;
-    ctx.drawImage(img, gx, gy, wW, hW);
-    ctx.restore();
-  }
+  G.disegna("rgba(0,0,0,0.42)", storia ? 38 : 30, storia ? -12 : -9, storia ? 10 : 8);
   ctx.textAlign = "center";
 }

@@ -136,9 +136,9 @@ function pannello(x, y, w, h, riempimento){
   ctx.strokeStyle = "rgba(200,155,60,0.45)"; ctx.lineWidth = 1.5; ctx.stroke();
 }
 
-function piede(){
+function piede(y){
   const t = [CFG_handle(), CFG_tag()].filter(Boolean).join("   \u00b7   ");
-  scrivi(t, 540, L.piede, L.piedeS, mutoAtt, SERIF, 5);
+  scrivi(t, 540, y || L.piede, L.piedeS, mutoAtt, SERIF, 5);
 }
 
 const CFG_handle = () => ($("c-handle").value || "").trim();

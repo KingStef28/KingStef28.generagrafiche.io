@@ -120,13 +120,21 @@ function disegnaCal(){
   const tit = (val("cal-titolo") || "CALENDARIO").toUpperCase();
   testoOro(tit, 540, L.convT, adattaTesto(tit, L.convTS, 860, "Anton", 2), 2);
 
+  const storia = L.H === 1920;
+  // guerriero in basso a destra, come nel post libero
+  const G = posaGuerriero(storia ? 900 : 640, storia ? 90 : 40);
+  const xL = L.bordo + 70, xR = L.W - L.bordo - 60, gapG = storia ? 28 : 22;
+
   const n = quanteCal();
   const unaColonna = n <= 8;                 // fino a 8 sta comoda una colonna sola
   const colonne = unaColonna ? 1 : 2;
   const nRighe = Math.ceil(n / colonne);
   const lh = Math.min(L.calH * (unaColonna ? 0.108 : 0.080), (L.calH * 0.94) / nRighe);
   const fs = Math.max(15, Math.round(lh * (unaColonna ? 0.50 : 0.58)));
-  const y0 = L.calY + (L.calH - nRighe * lh) / 2 + lh * 0.5;
+  // col guerriero la lista sale un po', per lasciargli spazio in basso
+  const y0 = L.calY + (L.calH - nRighe * lh) * (sinistraG ? 0.3 : 0.5) + lh * 0.5;
+  const colDi = i => Math.floor(i / nRighe), yDi = i => y0 + (i % nRighe) * lh;
+  const destra = y => Math.min(xR, G.limite(y - lh * 0.45, y + lh * 0.45, gapG));
 
   // un solo corpo per tutti i nomi: quello che fa entrare il più lungo
   const largNome = unaColonna ? 600 : 265;
@@ -137,26 +145,37 @@ function disegnaCal(){
     nomi.push(nm);
     if(nm) fsNomi = Math.min(fsNomi, adattaTesto(nm, fs, largNome, "Anton", 0));
   }
-  let maxNome = 0;
-  nomi.forEach(function(nm){
-    if(nm) maxNome = Math.max(maxNome, larghezzaTesto(nm, fsNomi, "Anton", 0));
-  });
 
-  // icone incolonnate e nomi allineati: il blocco è centrato sul nome più lungo
+  // icone incolonnate e nomi allineati: ogni colonna è centrata sul nome più lungo;
+  // se una riga finisce sul guerriero la colonna scorre a sinistra, e se non basta
+  // i nomi si rimpiccioliscono (tutti insieme)
   const largIcona = fs * 1.35, spazio = fs * 0.55;
-  const largBlocco = largIcona + spazio + maxNome;
   const centri = unaColonna ? [540] : [315, 765];
+  let sx;
+  for(;; fsNomi--){
+    const larg = nomi.map(nm => nm ? larghezzaTesto(nm, fsNomi, "Anton", 0) : 0);
+    const maxNome = Math.max(0, ...larg);
+    const maxSin = Math.max(0, ...larg.slice(0, nRighe));
+    sx = centri.map(cx => cx - (largIcona + spazio + maxNome) / 2);
+    larg.forEach(function(w, i){
+      sx[colDi(i)] = Math.min(sx[colDi(i)], destra(yDi(i)) - largIcona - spazio - w);
+    });
+    if(colonne === 2) sx[0] = Math.min(sx[0], sx[1] - fs * 0.8 - largIcona - spazio - maxSin);
+    if(sx[0] >= xL || fsNomi <= 14) break;
+  }
 
   for(let i = 0; i < n; i++){
-    const c = Math.floor(i / nRighe);
-    const y = y0 + (i - c * nRighe) * lh;
-    const sx = centri[c] - largBlocco / 2;
+    const y = yDi(i), x = sx[colDi(i)];
     const casa = $("cal-dove" + (i + 1)).value === "c";
-    if(casa) iconaCasa(sx + largIcona / 2, y, fs * 1.02, ORO_CHIARO);
-    else     iconaAereo(sx + largIcona / 2, y, fs * 1.18, ORO);
+    if(casa) iconaCasa(x + largIcona / 2, y, fs * 1.02, ORO_CHIARO);
+    else     iconaAereo(x + largIcona / 2, y, fs * 1.18, ORO);
     if(nomi[i])
-      scrivi(nomi[i], sx + largIcona + spazio, y + centroInk(nomi[i], fsNomi, "Anton", 0),
+      scrivi(nomi[i], x + largIcona + spazio, y + centroInk(nomi[i], fsNomi, "Anton", 0),
              fsNomi, ORO_CHIARO, "Anton", 0, "left");
   }
-  piede();
+  // in basso il piede finirebbe dietro la spada: col guerriero sale sotto il titolo
+  piede(sinistraG ? L.convT + L.piedeS * 1.9 : 0);
+
+  // per ultimo, con un alone dorato che lo stacca dal nero
+  G.disegna("rgba(241,196,25,0.55)", storia ? 46 : 36, 0, 0);
 }
